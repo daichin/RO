@@ -39,3 +39,6 @@ luac.out
 *.x86_64
 *.hex
 
+
+# Claude Code local agent settings (machine-specific)
+.claude/
