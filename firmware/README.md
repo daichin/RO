@@ -1,6 +1,6 @@
 # RO 純水回洗韌體（NodeMCU / Lua）
 
-設計說明在計畫檔：`C:\Users\daichin\.claude\plans\1-rosy-squirrel.md`
+設計說明：[`docs/design-plan.md`](../docs/design-plan.md)（完整計畫）、[`docs/ro-permeate-flush.html`](../docs/ro-permeate-flush.html)（同一份設計的網頁版）
 
 ## 檔案
 
