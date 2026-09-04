@@ -1,0 +1,1083 @@
+<title>RO 純水回洗改造</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+:root {
+  --ground: #EEF2F3;
+  --surface: #FFFFFF;
+  --surface-2: #F5F9FA;
+  --line: #D2DDE0;
+  --line-strong: #AFC0C6;
+  --ink: #0D1B21;
+  --ink-2: #3E5157;
+  --ink-3: #6C7F85;
+  --permeate: #0B6E8C;
+  --permeate-soft: #DCEDF3;
+  --brine: #94540F;
+  --brine-soft: #F4E7D5;
+  --alert: #A32419;
+  --alert-soft: #F7E3E0;
+  --shadow: 0 1px 2px rgba(13, 27, 33, .05), 0 8px 24px -12px rgba(13, 27, 33, .18);
+
+  --serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1317;
+    --surface: #101D22;
+    --surface-2: #16262C;
+    --line: #21373E;
+    --line-strong: #33505A;
+    --ink: #E4EDF0;
+    --ink-2: #A8BCC2;
+    --ink-3: #7B9098;
+    --permeate: #52C5EA;
+    --permeate-soft: #0D2E3A;
+    --brine: #E0A85F;
+    --brine-soft: #32240F;
+    --alert: #F08579;
+    --alert-soft: #391711;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0A1317;
+  --surface: #101D22;
+  --surface-2: #16262C;
+  --line: #21373E;
+  --line-strong: #33505A;
+  --ink: #E4EDF0;
+  --ink-2: #A8BCC2;
+  --ink-3: #7B9098;
+  --permeate: #52C5EA;
+  --permeate-soft: #0D2E3A;
+  --brine: #E0A85F;
+  --brine-soft: #32240F;
+  --alert: #F08579;
+  --alert-soft: #391711;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 96px; }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  padding: 64px 0 40px;
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--permeate);
+  margin: 0;
+}
+
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1.15;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.standfirst {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: 62ch;
+  margin: 0;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-top: 10px;
+}
+
+.fact { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+
+.fact dt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.fact dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.fact dd .unit { font-size: 13px; font-weight: 400; color: var(--ink-3); margin-left: 2px; }
+
+/* ---------- sections ---------- */
+
+section { padding-top: 56px; display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+.sec-head .eyebrow { color: var(--ink-3); }
+
+h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 27px;
+  line-height: 1.3;
+  letter-spacing: -.005em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h3 { font-family: var(--sans); font-weight: 700; font-size: 16px; line-height: 1.5; margin: 0; color: var(--ink); }
+
+p { margin: 0; max-width: 68ch; }
+.prose { display: flex; flex-direction: column; gap: 14px; }
+a { color: var(--permeate); }
+
+code, .m {
+  font-family: var(--mono);
+  font-size: .89em;
+  font-variant-numeric: tabular-nums;
+}
+
+code { background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; }
+strong { font-weight: 700; }
+
+/* ---------- cards ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+
+.callout {
+  border-left: 3px solid var(--alert);
+  background: var(--alert-soft);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.callout .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--alert);
+}
+
+.callout p { max-width: none; }
+
+.note {
+  border-left: 3px solid var(--permeate);
+  background: var(--permeate-soft);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--permeate);
+}
+
+.note p { max-width: none; }
+
+/* ---------- tables ---------- */
+
+.scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 520px; }
+
+thead th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+  background: var(--surface-2);
+}
+
+tbody td { padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.6; }
+tbody tr:last-child td { border-bottom: none; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.step { font-family: var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; width: 1%; }
+
+.tank-off { color: var(--ink-3); }
+.tank-on { color: var(--permeate); font-weight: 700; }
+
+/* ---------- wire chips ---------- */
+
+.wires {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(216px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.wire { background: var(--surface); padding: 11px 14px; display: flex; align-items: center; gap: 11px; }
+
+.swatch { width: 15px; height: 15px; border-radius: 50%; flex: 0 0 auto; border: 1px solid var(--line-strong); }
+
+.wire .pin {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+  min-width: 30px;
+}
+
+.wire .what { font-size: 14px; }
+.wire[data-role="tap"] { background: var(--permeate-soft); }
+.wire[data-role="cut"] { background: var(--brine-soft); }
+.wire[data-role="keep"] { opacity: .55; }
+
+.wire-key { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--ink-3); }
+.wire-key span { display: flex; align-items: center; gap: 7px; }
+.key-box { width: 11px; height: 11px; border: 1px solid var(--line-strong); }
+
+/* ---------- flow chain ---------- */
+
+.chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: 7px; }
+
+.node {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  padding: 7px 12px;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.node .tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.node[data-fluid="perm"] { border-color: var(--permeate); color: var(--permeate); }
+.node[data-fluid="perm"] .tag { background: var(--permeate); color: var(--surface); }
+.node[data-fluid="brine"] { border-color: var(--brine); color: var(--brine); }
+.node[data-fluid="brine"] .tag { background: var(--brine); color: var(--surface); }
+.node[data-fluid="shut"] { border-style: dashed; color: var(--ink-3); }
+
+.arrow { align-self: center; color: var(--ink-3); font-family: var(--mono); font-size: 13px; }
+
+/* ---------- timing diagram ---------- */
+
+.timing { background: var(--surface); border: 1px solid var(--line); padding: 20px 16px 12px; }
+.timing svg { display: block; width: 100%; height: auto; }
+
+.td-label { font-family: var(--mono); font-size: 12px; font-weight: 500; fill: var(--ink); }
+.td-sub { font-family: var(--mono); font-size: 10px; fill: var(--ink-3); }
+.td-axis { font-family: var(--mono); font-size: 10px; fill: var(--ink-3); }
+.td-rail { stroke: var(--line); stroke-width: 1; }
+.td-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.td-mark { stroke: var(--line-strong); stroke-width: 1.5; }
+.td-anno { font-family: var(--mono); font-size: 10px; fill: var(--ink-3); }
+.bar-perm { fill: var(--permeate); }
+.bar-brine { fill: var(--brine); }
+.bar-pump { fill: var(--ink-2); }
+.bar-tank { fill: var(--permeate-soft); stroke: var(--permeate); stroke-width: 1.5; }
+
+/* ---------- lists ---------- */
+
+ol.traps, ul.plain { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+ol.traps { counter-reset: trap; }
+
+ol.traps li {
+  counter-increment: trap;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+ol.traps li::before {
+  content: counter(trap, decimal-leading-zero);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  padding-top: 5px;
+}
+
+ol.traps li[data-sev="high"]::before { color: var(--alert); }
+ol.traps li > div { display: flex; flex-direction: column; gap: 4px; }
+
+ul.plain li { position: relative; padding-left: 18px; max-width: 68ch; }
+
+ul.plain li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .72em;
+  width: 6px;
+  height: 6px;
+  background: var(--permeate);
+  border-radius: 50%;
+}
+
+.phase-block { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line-strong); padding-top: 16px; }
+.phase-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.phase-head .n { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--permeate); letter-spacing: .08em; }
+.phase-head .cond { font-family: var(--mono); font-size: 12px; color: var(--ink-3); margin-left: auto; }
+
+ol.checks { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 15px; }
+ol.checks li { padding-left: 4px; }
+ol.checks li::marker { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+
+pre.sm {
+  margin: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--ink-2);
+}
+
+pre.sm b { color: var(--permeate); font-weight: 600; }
+pre.sm i { color: var(--alert); font-style: normal; font-weight: 600; }
+
+footer {
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+@media (max-width: 620px) {
+  .wrap { padding: 0 18px 72px; }
+  .masthead { padding-top: 44px; }
+  .card { padding: 18px; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">改造計畫 · 直通式 1000G</p>
+    <h1>純水回洗改造</h1>
+    <p class="standfirst">
+      原廠控制板的沖洗只會用自來水，停機後膜殼裡留下的是自來水。
+      這份計畫追加一段用小桶純水做的正沖，讓膜在靜置時泡在純水裡 ——
+      而且靠一顆隔離閥，讓整個沖洗對控制板完全隱形。
+    </p>
+    <dl class="facts">
+      <div class="fact"><dt>新增水路零件</dt><dd>1 <span class="unit">顆閥</span></dd></div>
+      <div class="fact"><dt>沖洗時間</dt><dd>8 <span class="unit">秒 · 可改</span></dd></div>
+      <div class="fact"><dt>沖洗週期</dt><dd>30 <span class="unit">分鐘</span></dd></div>
+      <div class="fact"><dt>用到的 I/O</dt><dd>6 <span class="unit">支</span></dd></div>
+    </dl>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">做什麼</p>
+      <h2>純水正沖</h2>
+    </div>
+    <div class="prose">
+      <p>
+        純水從<strong>膜的進水口</strong>進去，沿著膜面橫掃，由<strong>濃水口</strong>排到排水管。
+        走向跟正常製水完全相同，差別只在推進去的是純水而不是自來水。
+      </p>
+      <p>
+        目的是把膜殼裡殘留的水換掉。原廠停機時留在裡面的是自來水（約 150 ppm），靜置幾小時就是結垢與長菌的溫床；
+        換成純水（約 10 ppm）之後，裡面既沒有結垢離子也沒有養分。
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">現況</p>
+      <h2>這是直通式，桶不是產水桶</h2>
+    </div>
+    <div class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+      <div class="card">
+        <h3>高壓開關是需求開關</h3>
+        <p>沒有儲水桶，所以它的角色不是「桶滿了沒」：龍頭開 → 管路洩壓 → 閉合 → 製水；龍頭關 → 充壓 → 斷開 → 停機。</p>
+        <p>常閉型，達壓斷開。</p>
+      </div>
+      <div class="card">
+        <h3>小桶只服務沖洗</h3>
+        <p>它是專用的純水蓄水源。改造後<strong>永遠不進入飲用路徑</strong> —— 只在補桶時進水、沖洗時出水。</p>
+        <p>純水回泵線已經就位：桶 → 電磁閥 → 逆止閥 → 泵前三通。</p>
+      </div>
+    </div>
+    <div class="note">
+      <span class="label">一個要澄清的舊誤解</span>
+      <p>曾測到「開機後 15 秒才出水」，那是<strong>空桶在吸水</strong>，不是啟動延遲。管路平時是滿的 —— 只要桶被隔離，造出來的水直接從龍頭出去，沒有等待。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">核心設計</p>
+      <h2>讓沖洗對控制板隱形</h2>
+    </div>
+    <div class="prose">
+      <p>
+        沖洗要從桶抽走水。而桶和高壓開關原本接在<strong>同一條管路</strong>上 ——
+        桶壓一掉，高壓開關就閉合，控制板判定「有人在用水」而開始製水，
+        把自來水推回剛沖乾淨的膜殼。沖洗等於白做。
+      </p>
+      <p>
+        解法是把兩邊拆開：在<strong>十字接頭與壓力桶之間</strong>加一顆常閉電磁閥 <span class="m">K_tank</span>，
+        並把<strong>沖洗取水的三通移到它的桶側</strong>。高壓開關留在管路側，於是沖洗只動到桶，管路側的壓力不受影響。
+      </p>
+      <p>K_tank 一關，沖洗期間管路側完全不受擾動，原因有兩層：</p>
+    </div>
+    <ul class="plain">
+      <li>沖洗時廢水閥全開，膜的進水側幾乎沒有背壓，跨膜壓差趨近於零，<strong>透水量可以忽略</strong>。</li>
+      <li>而且純水管上那顆逆止閥的另一側是充飽壓力的管路，膜的純水側<strong>根本推不開它</strong>。</li>
+    </ul>
+    <div class="note">
+      <span class="label">結果</span>
+      <p>整個沖洗期間沒有任何水進入管路側 —— 壓力不變、高壓開關一路保持斷開、<strong>板子從頭到尾不知道發生過沖洗</strong>。沖洗結束的瞬間就已經是目標待機狀態：膜殼裡是純水，管路有壓，板子在睡。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">循環</p>
+      <h2>一輪完整流程</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>階段</th><th>K_tank</th><th>控制板</th><th>膜殼內</th></tr></thead>
+        <tbody>
+          <tr><td><strong>待機</strong></td><td class="tank-off">關（斷電）</td><td>睡</td><td class="tank-on">純水 ✓</td></tr>
+          <tr><td>開龍頭</td><td class="tank-off">關</td><td>製水，<strong>水直接給龍頭</strong></td><td>自來水</td></tr>
+          <tr><td>關龍頭</td><td class="tank-off">關</td><td>管路充壓 → 停機</td><td>自來水</td></tr>
+          <tr><td>補桶</td><td class="tank-on">開</td><td>製水填桶 → 停機</td><td>自來水</td></tr>
+          <tr><td>純水沖洗</td><td class="tank-off">關</td><td>睡（毫不知情）</td><td class="tank-on">→ 純水 ✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <span class="label">順序不能顛倒</span>
+      <p><strong>補桶必須排在沖洗之前。</strong>反過來的話，補桶會把自來水推回膜殼，前功盡棄。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">沖洗中的水路</p>
+      <h2>純水走的路徑</h2>
+    </div>
+    <div class="scroll" style="padding:20px 22px;">
+      <div class="chain">
+        <span class="node" data-fluid="perm"><span class="tag">純水</span>小桶</span>
+        <span class="arrow">→</span>
+        <span class="node" data-fluid="perm">純水閥 <b>開</b></span>
+        <span class="arrow">→</span>
+        <span class="node" data-fluid="perm">逆止閥</span>
+        <span class="arrow">→</span>
+        <span class="node">泵前三通</span>
+        <span class="arrow">→</span>
+        <span class="node">加壓泵 <b>運轉</b></span>
+        <span class="arrow">→</span>
+        <span class="node">RO 膜</span>
+        <span class="arrow">→</span>
+        <span class="node" data-fluid="brine">廢水閥 <b>全開</b></span>
+        <span class="arrow">→</span>
+        <span class="node" data-fluid="brine"><span class="tag">濃水</span>排水器</span>
+      </div>
+      <div class="chain" style="margin-top:10px">
+        <span class="node" data-fluid="shut">K_tank 關 ✕ 管路側完全隔離</span>
+        <span class="node" data-fluid="shut">進水閥 斷電 ✕ 自來水隔絕</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">動工前</p>
+      <h2>三項量測</h2>
+    </div>
+    <div class="prose">
+      <p>這三個數字一起決定 <span class="m">T_FLUSH</span> 的可行範圍。</p>
+    </div>
+    <div class="card">
+      <h3>一 · 桶的實際可用容積</h3>
+      <p>從龍頭放到沒水，用量杯接，記錄體積。</p>
+    </div>
+    <div class="card">
+      <h3>二 · B —— 膜殼容水量</h3>
+      <p>把膜的進出管拆下，把膜殼裡的水倒進量杯。這是沖洗要置換掉的量。</p>
+    </div>
+    <div class="card">
+      <h3>三 · 泵在沖洗狀態下的流量</h3>
+      <p>手動給廢水閥與純水閥通電、跑泵，用量杯接排水管，量固定秒數的排水量。</p>
+    </div>
+    <div class="callout">
+      <span class="label">兩個約束要同時滿足</span>
+      <p><code>T_FLUSH × 泵流量</code> 必須<strong>明顯小於桶可用容積</strong>（建議不超過 60%，見風險 01），同時盡量接近 B 才有好的置換率。<br>
+      若 B 逼近桶容積，餘裕很薄，就只能做部分置換 —— 沖洗不是全有全無，<strong>置換一半仍是實質改善</strong>。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">料件</p>
+      <h2>要買的東西</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>項目</th><th>規格</th><th>數量</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>NodeMCU (ESP8266)</td><td>已有</td><td class="num">—</td><td>狀態機 + 設定介面</td></tr>
+          <tr><td><strong>電磁閥</strong></td><td>24V DC、<strong>常閉</strong>、2 分快接</td><td class="num">1</td><td><strong>K_tank —— 唯一新增的水路零件</strong></td></tr>
+          <tr><td>快接三通</td><td>2 分</td><td class="num">1</td><td>沖洗取水點移到 K_tank 桶側</td></tr>
+          <tr><td>繼電器模組</td><td>5V、光耦隔離、<strong>跳線設成 <span class="m">L</span> 低電平觸發</strong>、接點 ≥10A/30VDC</td><td class="num">4 路</td><td>K_perm／K_pump／K_waste／K_tank。<strong>四路都只要單刀</strong></td></tr>
+          <tr><td>DC-DC 降壓模組</td><td>24V → 5V、3A</td><td class="num">1</td><td>供 NodeMCU 與繼電器</td></tr>
+          <tr><td>分壓電阻</td><td>100kΩ + 12kΩ，1/4W</td><td class="num">2 組</td><td>24V 訊號 → 進 GPIO</td></tr>
+          <tr><td>保險絲</td><td>泵路 5A、控制路 1A</td><td class="num">2</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <span class="label">已經有了，不用買</span>
+      <p><strong>純水沖洗電磁閥</strong>（水路上已有）與<strong>廢水限流器</strong>（現有的廢水閥不通電時就是限流狀態）。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">水路</p>
+      <h2>只改兩處</h2>
+    </div>
+    <ul class="plain">
+      <li>在<strong>十字接頭 → 壓力桶</strong>那一段裝上 K_tank。</li>
+      <li>把<strong>沖洗取水的三通</strong>從十字接頭移到 <strong>K_tank 的桶側</strong>。</li>
+    </ul>
+    <div class="callout">
+      <span class="label">動工前先目視確認</span>
+      <p>整個方案的前提是<strong>高壓開關位於十字接頭的上游</strong>（水路圖的順序是 <span class="m">膜純水口 → 逆止閥 → 高壓開關 → 十字</span>）。若實機上開關在桶那一側，前提就不成立。<br>
+      同時確認：純水回泵線的逆止閥方向是「桶 → 泵前」；純水電磁閥是<strong>常閉（NC）</strong>型；桶球閥全開、2 分管無壓折。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">電路</p>
+      <h2>線色對照</h2>
+    </div>
+    <div class="wires">
+      <div class="wire"><span class="swatch" style="background:#F2A0A8"></span><span class="pin">12</span><span class="what">24V 正極</span></div>
+      <div class="wire"><span class="swatch" style="background:#FFFFFF"></span><span class="pin">11</span><span class="what">24V 負極</span></div>
+      <div class="wire" data-role="cut"><span class="swatch" style="background:#E01B22"></span><span class="pin">4</span><span class="what">沖洗閥高側 — 切斷串入繼電器</span></div>
+      <div class="wire" data-role="keep"><span class="swatch" style="background:#E01B22"></span><span class="pin">10</span><span class="what">沖洗閥 — 恆為 0V，就是地，不碰</span></div>
+      <div class="wire" data-role="tap"><span class="swatch" style="background:#F07E1E"></span><span class="pin">IN1</span><span class="what">水泵 − 低側輸出 — 取樣</span></div>
+      <div class="wire" data-role="tap"><span class="swatch" style="background:#38A9CE"></span><span class="pin">IN2</span><span class="what">低壓·漏水鏈 — 取樣</span></div>
+      <div class="wire" data-role="keep"><span class="swatch" style="background:#1B3F8F"></span><span class="pin">2·3</span><span class="what">高壓開關 — <strong>完全不碰</strong></span></div>
+      <div class="wire" data-role="keep"><span class="swatch" style="background:#111111"></span><span class="pin">6·9</span><span class="what">進水閥 — 不碰</span></div>
+      <div class="wire" data-role="keep"><span class="swatch" style="background:#1E7A3C"></span><span class="pin">5·8</span><span class="what">水泵 ± — 不碰</span></div>
+      <div class="wire" data-role="keep"><span class="swatch" style="background:#F2C500"></span><span class="pin">1·7</span><span class="what">低壓開關 — 不碰</span></div>
+    </div>
+    <div class="wire-key">
+      <span><span class="key-box" style="background:var(--permeate-soft);border-color:var(--permeate)"></span>取樣（並聯，不影響原線路）</span>
+      <span><span class="key-box" style="background:var(--brine-soft);border-color:var(--brine)"></span>切斷後串入繼電器</span>
+      <span><span class="key-box" style="background:var(--surface);border-color:var(--line-strong)"></span>維持原狀</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">電路</p>
+      <h2>輸出四路，輸入兩路</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>繼電器</th><th>接法</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>K_perm</strong><br>純水閥</td>
+            <td><code>24V+ → 接點 → 純水閥 → 24V−</code></td>
+            <td>全新迴路，與控制板零互動</td>
+          </tr>
+          <tr>
+            <td><strong>K_waste</strong><br>廢水閥切換</td>
+            <td><strong>單刀</strong>，<strong>串在</strong>紅色 <span class="m">4</span> 上：<span class="m">NC</span> ← 控制板的 <span class="m">4</span>、<span class="m">NO</span> ← 自己的 24V+、<span class="m">COM</span> → 廢水閥線圈正極</td>
+            <td>實測 <span class="m">10</span> 永遠 0V、只有 <span class="m">4</span> 會跳 +24V ⇒ 控制板是<strong>高側開關</strong>，<span class="m">10</span> 就是接地。廢水閥負極本來就固定在地，只需接管正極</td>
+          </tr>
+          <tr>
+            <td><strong>K_pump</strong><br>強制啟動泵</td>
+            <td>接點<strong>並聯</strong>在「低開繼電器 → XT60 → 水泵」那段 24V 供電接點上</td>
+            <td>不碰控制板電子線路</td>
+          </tr>
+          <tr>
+            <td><strong>K_tank</strong><br>桶隔離閥</td>
+            <td><code>24V+ → 接點 → K_tank 閥 → 24V−</code></td>
+            <td>常閉閥：待機斷電＝桶隔離，不耗電</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <span class="label">失效方向</span>
+      <p>全部斷電＝全部復歸。K_tank 關 → 桶永久隔離 → <strong>機器退化成一台單純的直通式 RO，照常出水</strong>，只是不再沖洗。這是可接受且安全的失效模式。</p>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>輸入</th><th>取樣點</th><th>判讀</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>IN1</strong><br>泵狀態</td>
+            <td>控制板<strong>橘色 <span class="m">水泵−</span></strong> 線（低側輸出）</td>
+            <td><strong>低電位 = 泵運轉</strong>（反相）<br><strong>上升沿 = 板子停機</strong>，這是本設計的主要事件</td>
+          </tr>
+          <tr>
+            <td><strong>IN2</strong><br>低壓·漏水鏈</td>
+            <td>藍綠色那條</td>
+            <td>低 = 缺水或漏水 → <strong>立即 ABORT</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <span class="label">不加任何保護元件 —— 那顆 100kΩ 就是保護元件</span>
+      <p>IN1 直接掛在控制板橘線上，控制板切斷低側時，低開繼電器線圈的反電動勢會把該節點頂高。但算一下就知道不用擔心：</p>
+      <p>假設上游只有電晶體的雪崩箝位、橘線衝到 <strong>60V</strong> —— 分壓中點想升到 6.4V，但 ESP8266 內部箝位二極體會把它壓在約 3.9V。此時流過 100kΩ 的是 <code>(60−3.9)/100k ≈ 0.56 mA</code>，扣掉經 12kΩ 到地的 0.33 mA，<strong>真正灌進 ESP 內部保護的只有約 0.24 mA</strong>。</p>
+      <p>即使完全沒有上游箝位、衝到 300V，也只有約 2.6 mA，而且是微秒級暫態 —— ESP 的內部保護結構吃得下。</p>
+      <p><strong>低開繼電器已經穩定運作很久，不去動它的線圈。</strong>為了一個算出來不成立的風險去改一台正常的機器，代價大於效益。繼電器模組那四路輸出本來就有光耦隔離、線圈上也有內建續流二極體，同樣不用加東西。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">電路</p>
+      <h2>NodeMCU 腳位</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>腳</th><th>GPIO</th><th>用途</th><th>備註</th></tr></thead>
+        <tbody>
+          <tr><td class="num">D1</td><td class="num">GPIO5</td><td>K_perm</td><td>安全</td></tr>
+          <tr><td class="num">D2</td><td class="num">GPIO4</td><td>K_pump</td><td>安全</td></tr>
+          <tr><td class="num">D5</td><td class="num">GPIO14</td><td>K_waste</td><td>—</td></tr>
+          <tr><td class="num">D6</td><td class="num">GPIO12</td><td>K_tank</td><td>—</td></tr>
+          <tr><td class="num">D7</td><td class="num">GPIO13</td><td>IN1 泵狀態</td><td>低電位 = 泵運轉</td></tr>
+          <tr><td class="num">D0</td><td class="num">GPIO16</td><td>IN2 低壓·漏水鏈</td><td>輪詢即可</td></tr>
+          <tr><td class="num">D8 / A0</td><td class="num">—</td><td>保留</td><td>日後加 TDS 或手動按鈕</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <p>避開 D3／D4（GPIO0／2）；確認板上 D0–RST 跳線沒有短接。只用 6 個 I/O，還有餘裕 —— 不必為了腳位換 ESP32。</p>
+    </div>
+
+    <div class="card">
+      <h3>繼電器模組必須設成低電平觸發，並用 open-drain 驅動</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>模組規格（5V 版）</th><th>觸發電壓</th></tr></thead>
+          <tbody>
+            <tr><td>低電平觸發</td><td class="num">0 – 1.5V</td></tr>
+            <tr><td>高電平觸發</td><td class="num"><strong>3.8 – 5V</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>ESP8266 的 GPIO 只有 <strong>3.3V</strong>，<strong>落在 1.5V 與 3.8V 中間，兩邊都不到</strong> —— 高電平觸發根本不在規格內，這不是餘裕夠不夠的問題。</p>
+      <p>板上 <span class="m">S1</span>–<span class="m">S4</span> 跳線可選極性：<strong>接到 <span class="m">L</span> 就是低電平觸發</strong>。設成低電平後 0V 觸發、3.3V 不觸發，完全在規格內。</p>
+      <p><strong>再用 open-drain 讓「關」也變成零殘流</strong>：低電平觸發配 5V 供電時，GPIO 拉高到 3.3V，LED 兩端還剩約 0.5 mA 殘流。改成「關 = 放開成高阻抗」，由模組自己上拉到 5V，LED 完全截止。</p>
+      <pre class="sm">gpio.mode(pin, gpio.OPENDRAIN)
+gpio.write(pin, gpio.LOW)   <i>-- 繼電器開</i>
+gpio.write(pin, gpio.HIGH)  <i>-- 放開 → 5V → 繼電器關</i></pre>
+      <div class="note">
+        <span class="label">開機狀態天然安全</span>
+        <p>ESP8266 開機時 GPIO 預設是輸入（高阻抗），在低電平觸發下等同「放開」→ 模組上拉到 5V → <strong>四路斷開</strong>。上電、重開機、燒錄韌體全程都是如此。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">韌體</p>
+      <h2>沖洗時序</h2>
+    </div>
+
+    <div class="timing">
+      <svg viewBox="0 0 720 246" role="img" aria-label="四路繼電器在 14 秒沖洗程序中的動作時序圖">
+        <g class="td-grid">
+          <line x1="192.2" y1="26" x2="192.2" y2="196"></line>
+          <line x1="316.6" y1="26" x2="316.6" y2="196"></line>
+          <line x1="441.1" y1="26" x2="441.1" y2="196"></line>
+          <line x1="565.5" y1="26" x2="565.5" y2="196"></line>
+          <line x1="690" y1="26" x2="690" y2="196"></line>
+        </g>
+        <line class="td-mark" x1="192.2" y1="20" x2="192.2" y2="200"></line>
+
+        <text class="td-label" x="0" y="40">K_tank</text>
+        <text class="td-sub" x="0" y="54">桶隔離閥</text>
+        <line class="td-rail" x1="130" y1="44" x2="690" y2="44"></line>
+        <rect class="bar-tank" x="130" y="34" width="62.2" height="20" rx="2"></rect>
+
+        <text class="td-label" x="0" y="84">K_waste</text>
+        <text class="td-sub" x="0" y="98">廢水閥全開</text>
+        <line class="td-rail" x1="130" y1="88" x2="690" y2="88"></line>
+        <rect class="bar-brine" x="198.4" y="78" width="435.6" height="20" rx="2"></rect>
+
+        <text class="td-label" x="0" y="128">K_perm</text>
+        <text class="td-sub" x="0" y="142">純水閥</text>
+        <line class="td-rail" x1="130" y1="132" x2="690" y2="132"></line>
+        <rect class="bar-perm" x="198.4" y="122" width="373.3" height="20" rx="2"></rect>
+
+        <text class="td-label" x="0" y="172">K_pump</text>
+        <text class="td-sub" x="0" y="186">加壓泵</text>
+        <line class="td-rail" x1="130" y1="176" x2="690" y2="176"></line>
+        <rect class="bar-pump" x="260.6" y="166" width="248.9" height="20" rx="2"></rect>
+
+        <text class="td-anno" x="130" y="20">← 補桶</text>
+        <text class="td-anno" x="198" y="20">先隔離桶，隔 200ms 才動其他閥</text>
+        <text class="td-anno" x="204" y="160">充管 2s</text>
+        <text class="td-anno" x="300" y="160">正沖 8s</text>
+        <text class="td-anno" x="512" y="114">洩壓</text>
+
+        <line class="td-rail" x1="130" y1="204" x2="690" y2="204"></line>
+        <text class="td-axis" x="192.2" y="220" text-anchor="middle">0</text>
+        <text class="td-axis" x="316.6" y="220" text-anchor="middle">4</text>
+        <text class="td-axis" x="441.1" y="220" text-anchor="middle">8</text>
+        <text class="td-axis" x="565.5" y="220" text-anchor="middle">12</text>
+        <text class="td-axis" x="690" y="220" text-anchor="middle">16</text>
+        <text class="td-axis" x="690" y="238" text-anchor="end">秒</text>
+      </svg>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>t</th><th>動作</th></tr></thead>
+        <tbody>
+          <tr><td class="step">1</td><td class="num">0s</td><td><strong>K_tank OFF</strong> → 桶與管路隔離。從這一刻起板子看不到任何動作</td></tr>
+          <tr><td class="step">2</td><td class="num">0–0.2s</td><td><strong>隔離等待</strong> <span class="m">T_ISOLATE = 200ms</span> —— 先讓 K_tank 確實關到底才動其他閥，見下方說明</td></tr>
+          <tr><td class="step">3</td><td class="num">0.2s</td><td>K_waste ON（廢水閥全開）、K_perm ON（純水閥開）</td></tr>
+          <tr><td class="step">4</td><td class="num">0.2–2.2s</td><td>充管等待 <span class="m">T_PRIME = 2s</span> —— <strong>避免泵空打，不可省</strong></td></tr>
+          <tr><td class="step">5</td><td class="num">2.2–10.2s</td><td>K_pump ON → 泵運轉，純水正沖 <span class="m">T_FLUSH = 8s</span></td></tr>
+          <tr><td class="step">6</td><td class="num">10.2s</td><td>K_pump OFF</td></tr>
+          <tr><td class="step">7</td><td class="num">12.2s</td><td>K_perm OFF</td></tr>
+          <tr><td class="step">8</td><td class="num">14.2s</td><td>洩壓後 K_waste OFF（濃水回到限流狀態）</td></tr>
+          <tr><td class="step">9</td><td class="num">14.2s</td><td>記錄 <span class="m">last_flush</span>、<span class="m">used = false</span> → 回待機</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>為什麼 K_tank 要先關、隔 200ms 才動其他閥</h3>
+      <p><strong>穩態下 K_waste 與 K_perm 都不會影響管路端</strong>，有兩道隔離：K_perm 接的是 K_tank <strong>桶側</strong>的三通（那條線上還有桶 → 泵前的逆止閥）；K_waste 開的是<strong>濃水側</strong>，而管路端與膜的純水側之間有逆止閥（膜 → 管路單向），管路的水推不回膜裡。</p>
+      <p><strong>風險在切換瞬間。</strong>繼電器與電磁閥不是同時動作的。若 K_tank 還沒關到底、K_perm 就已經開了，那一瞬間<strong>桶和管路同時通到泵前三通</strong>，水往低壓的泵前流，管路壓力被拉掉 —— 掉夠多就跳高壓開關，板子醒來，「隱形」的前提當場破功。</p>
+      <p>機率不高（K_tank 是常閉閥，關閉靠彈簧釋放，通常比 K_perm 的線圈吸合快），但<strong>不保證</strong> —— 閥老化、彈簧變弱、接點時間差都可能讓順序反過來。消除這個窗口的成本是零。</p>
+      <p>典型繼電器動作 5–15 ms、電磁閥 10–30 ms，100 ms 就夠；取 <strong>200 ms</strong> 是給老化留餘裕。tick 是 100 ms，所以就是 2 個 tick，實作成一個 <span class="m">ISOLATE</span> 狀態。</p>
+      <p style="color:var(--ink-3)">K_waste 與 K_perm 之間<strong>不用</strong>再錯開 —— 一個在濃水側、一個在桶側，互不干涉。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">韌體</p>
+      <h2>狀態機與參數</h2>
+    </div>
+    <div class="note">
+      <span class="label">觸發是計時器，不是用水事件</span>
+      <p>沖洗完成後開始計時；週期內用水一律不沖；時間一到就補桶＋沖洗，若那一刻正在用水，就等這次用完立刻做。</p>
+      <p><strong>為什麼不綁在用水事件上</strong>：那樣一旦某次用水剛好落在鎖定窗內就會被永久跳過。例如 09:55 沖洗、10:00 用水（跳過）、18:00 才再用水 —— 膜就泡了 8 小時自來水。改成計時器後，<strong>任何一次用水之後 30 分鐘內，膜一定會被換回純水</strong>。</p>
+    </div>
+    <pre class="sm">IDLE    K_tank 關；膜殼裡是純水
+ ├─ IN1 下降沿（板子開始製水 = 有人用水）→ used = true
+ │
+ └─ used 且 計時器到期
+      ├─ 板子正在製水 → 標記 pending，等這次用完
+      └─ 板子已停機   → <b>REFILL</b>
+
+<b>REFILL</b>  K_tank ON → 桶接回管路 → 板子自行製水填桶
+ └─ IN1 上升沿（桶已充飽）→ <b>FLUSH</b>
+
+<b>FLUSH</b>   K_tank OFF → 等 T_ISOLATE → 其餘依時序表跑完
+        記錄 last_flush、used = false → IDLE
+
+        中止條件
+        ├─ IN2 異常   → <i>ABORT</i>
+        └─ IN1 下降沿 → <i>ABORT</i>（有人開了龍頭）
+
+<i>ABORT</i>   四路繼電器全部復歸 → IDLE</pre>
+    <div class="card">
+      <h3><span class="m">used</span> 旗標 —— 沒人用水就不沖</h3>
+      <p>計時器到期時，只有「上次沖洗之後板子有製過水」才會真的去沖。完全沒人用水的話，膜殼裡本來就是純水，再沖一次只是<strong>拿純水換純水</strong> —— 純粹的空轉，一天 48 輪、約 14 L 純水排掉、96 次額外泵啟停。</p>
+      <p>加了這個旗標，長期外出時完全不耗水，而「用水後 30 分鐘內必回純水」的保證絲毫不變。</p>
+      <p style="color:var(--ink-3)">旗標只在 IDLE 由 IN1 下降沿設定。REFILL 階段板子當然也在製水，但那是我們自己叫的、而且緊接著就沖洗，不能拿來自我觸發。</p>
+    </div>
+    <div class="callout">
+      <span class="label">沖洗撞上用水</span>
+      <p>沖洗期間 K_tank 是關的，板子應該完全不動。若此時 IN1 轉低，代表使用者開了龍頭把管路壓力放掉了 —— <strong>立刻中止沖洗、把機器讓回去</strong>。因為沖洗中廢水閥全開、膜建不起壓力，硬撐下去使用者會沒水喝。</p>
+      <p>中止時<strong>不更新 <span class="m">last_flush</span>、也不清掉 <span class="m">used</span></strong>，回到 IDLE 後條件重新成立，這次用水結束就自動重試。不需要額外的重試邏輯。</p>
+      <p>這條同時是<strong>核心假設的哨兵</strong>：若在沒有人用水的情況下觸發，就代表「沖洗對板子隱形」的隔離假設不成立。</p>
+    </div>
+    <div class="prose">
+      <p>全程<strong>不需要對時，也不需要 RTC</strong> —— 計時用開機以來的毫秒累加。</p>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>參數</th><th>預設</th><th>硬上限</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td class="m">T_FLUSH</td><td class="num"><strong>8s</strong></td><td class="num"><strong>15s</strong></td><td>沖洗時間。上限是防泵乾轉的保護，見風險 01</td></tr>
+          <tr><td class="m">MIN_INTERVAL</td><td class="num"><strong>30 分</strong></td><td class="num">—</td><td>沖洗週期。時間一到就補桶＋沖洗；期間用水一律不沖</td></tr>
+          <tr><td class="m">T_ISOLATE</td><td class="num">200ms</td><td class="num">—</td><td>K_tank 關閉後、開其他閥之前的間隔。消除切換瞬間的重疊窗口</td></tr>
+          <tr><td class="m">T_PRIME</td><td class="num">2s</td><td class="num">—</td><td>充管延遲，避免泵空打</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <span class="label">設定介面</span>
+      <p>NodeMCU 起一個極小的 HTTP 服務，可隨時修改 <span class="m">T_FLUSH</span> 與 <span class="m">MIN_INTERVAL</span>，數值寫進 flash、開機載入，另有手動觸發端點方便測試。</p>
+      <p><strong>韌體必須拒絕超過硬上限的設定值</strong> —— 桶在沖洗時是封閉容器，打錯一個數字就是泵乾轉。<br>
+      設定介面與 WiFi <strong>不得阻塞狀態機或 ABORT 路徑</strong>，斷網時照常用最後存下的參數運作。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">韌體</p>
+      <h2>事件 log</h2>
+    </div>
+    <div class="prose">
+      <p>
+        裝置原本<strong>不保存任何歷史</strong>：只有累計次數和「最後一次」中止原因，重開機全部歸零。
+        這讓長跑觀察沒東西可看，但更嚴重的是<strong>哨兵條件失效</strong> ——
+        憑 <span class="m">aborts=3</span> 分不出來是「你自己開龍頭撞到三次」還是「凌晨三點自己跳了三次」。
+        <strong>後者代表整套設計的前提不成立</strong>，而那正是最需要知道的事。
+      </p>
+    </div>
+
+    <div class="note">
+      <span class="label">寫檔案，不是寫 RAM</span>
+      <p>Flash 約 3 MB，自由堆積只有約 40 KB —— <strong>差 75 倍</strong>。所以 log 進 SPIFFS 檔案，順帶解決重開機不丟資料。</p>
+    </div>
+
+    <div class="card">
+      <h3>行格式</h3>
+      <pre class="sm">&lt;boot&gt;.&lt;uptime_s&gt; &lt;epoch|-&gt; &lt;KIND&gt; &lt;state&gt; &lt;text&gt;
+
+7.1234 1757001234 STATE REFILL 週期到，開始補桶
+7.1250 1757001250 STATE IDLE 沖洗完成，膜殼裡是純水
+7.1801 1757001801 <i>ABORT</i> PRIME 使用者開了龍頭，把機器讓回去
+3.90   -          BOOT  IDLE  已啟動（校時前）</pre>
+      <p><strong>KIND</strong>：<span class="m">BOOT</span>／<span class="m">STATE</span>／<span class="m">ABORT</span>／<span class="m">CFG</span>／<span class="m">TIME</span>／<span class="m">LOCK</span></p>
+      <p><strong>開機序號</strong>存在 <span class="m">boot.txt</span>，每次啟動遞增 —— 沒有 RTC 時它是唯一能區分不同開機階段的東西。</p>
+      <p><strong>輪替</strong>：<span class="m">log.txt</span> 超過 128 KB 就改名成 <span class="m">log.1.txt</span>，重開新檔。以每天約 100 行、每行約 60 bytes 估算，兩個檔約可留 <strong>40 天</strong>。</p>
+    </div>
+
+    <div class="card">
+      <h3>時間戳：由訪客校時，不加模組</h3>
+      <p>裝置沒有 RTC，也刻意沒裝 <span class="m">sntp</span>。改成網頁載入時用三行 JS 呼叫 <span class="m">/settime</span>，裝置記下開機當下的 epoch 與時區；<strong>每一行 log 在寫入時就把當下的 epoch 一起寫進去</strong>。</p>
+      <pre class="sm">&lt;script&gt;fetch('/settime?t='+Math.floor(Date.now()/1000)
+  +'&amp;tz='+(-new Date().getTimezoneOffset()))&lt;/script&gt;</pre>
+      <p>這樣讀取時不需要回頭找錨點、不需要兩趟掃描，<span class="m">curl</span> 直接看也是可讀的時間。輪詢腳本也可以順便帶上，所以就算不開網頁也會校到。</p>
+    </div>
+
+    <div class="callout">
+      <span class="label">順帶要修的一個真實缺陷：中止迴圈</span>
+      <p>中止不更新 <span class="m">last_flush</span> 也不清 <span class="m">used</span>，所以會自動重試 —— 這在「使用者開龍頭」的情境下是對的。</p>
+      <p>但如果中止的原因是<strong>隔離假設不成立</strong>（沖洗本身吵醒了板子），就會變成「補桶 → 沖洗 → 板子醒 → 中止 → 板子停 → 補桶」的<strong>緊迴圈</strong>，一直操泵也會把 log 寫爆。</p>
+      <p>加上<strong>連續中止退避</strong>：連續 3 次中止而中間沒有一次成功沖洗，就進入 6 小時鎖定並記一筆 <span class="m">LOCK</span>。成功沖洗或手動觸發時清零。</p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>端點</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td class="m">/log</td><td>最後 16 KB，<span class="m">text/plain</span>，<strong>串流</strong></td></tr>
+          <tr><td class="m">/log?full=1</td><td>完整（含輪替檔）</td></tr>
+          <tr><td class="m">/log?clear=1</td><td>清空</td></tr>
+          <tr><td class="m">/settime?t=&lt;epoch&gt;&amp;tz=&lt;分鐘&gt;</td><td>校時。首頁 JS 自動呼叫一次</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="label">/log 必須串流，不能組字串</span>
+      <p>現有的 <span class="m">web.lua</span> 是把整個回應組成一個 Lua 字串再送出。log 檔可達 128 KB，而自由堆積只有約 40 KB —— <strong>直接讀進來會當機</strong>。</p>
+      <p><span class="m">/log</span> 要走獨立路徑：<span class="m">f:seek()</span> 定位後每次讀 512 bytes、送出，在 <span class="m">on("sent")</span> 回呼裡讀下一塊，串完才關閉。</p>
+      <p><strong>另外，中止路徑的順序不能動</strong>：<span class="m">M.abort()</span> 第一行就是關掉所有繼電器，安全動作先完成、之後才記 log。SPIFFS 寫入要幾到幾十毫秒，而 log 是在 100ms tick 裡觸發的。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">施工</p>
+      <h2>風險與陷阱</h2>
+    </div>
+    <ol class="traps">
+      <li data-sev="high"><div>
+        <h3>泵乾轉 —— 最需要注意</h3>
+        <p>K_tank 關閉時，桶是一個<strong>封閉、沒有補水的容器</strong>。1000G 系統的泵流量大（約 3–4 L/min），若桶只有 0.8 L 左右，<strong>十幾秒就能抽乾</strong>。<span class="m">T_FLUSH</span> 的硬上限就是為此存在；量測三做完後應該把它調到實測的安全範圍內。</p>
+      </div></li>
+      <li data-sev="high"><div>
+        <h3>K_pump 繞過漏水保護</h3>
+        <p>並聯在泵供電上，繞過了「漏水繼電器 → 低壓開關」的保護鏈。<strong>先查漏水繼電器有沒有第二組備用接點</strong>可以串聯；沒有的話只能靠 IN2 做 ABORT，而該檢查必須在主迴圈最前面、<strong>不得被 WiFi／HTTP／OTA 等阻塞呼叫擋住</strong>。</p>
+      </div></li>
+      <li data-sev="high"><div>
+        <h3>高壓開關的實際位置</h3>
+        <p>整個方案假設它在十字接頭上游。動工前目視確認，不一致的話前提不成立。</p>
+      </div></li>
+      <li><div>
+        <h3>K_waste 要串接，不要並聯</h3>
+        <p>實測 <span class="m">10</span> 永遠 0V、<span class="m">4</span> 才是高側輸出，所以單刀就夠。但要<strong>串接</strong>（<span class="m">NC</span> 走控制板、<span class="m">NO</span> 走自己的 24V+），不要用並聯的方式把 24V+ 灌到控制板的輸出腳上。</p>
+      </div></li>
+      <li><div>
+        <h3>沖洗撞上用水</h3>
+        <p>沖洗只有十幾秒，但期間廢水閥全開、膜建不起壓力，若使用者剛好開龍頭會沒水喝。靠 IN1 下降沿中止並把機器讓回去。中止不更新 <span class="m">last_flush</span>，用完水會自動重試。</p>
+      </div></li>
+      <li><div>
+        <h3>REFILL 卡住</h3>
+        <p>若因故板子一直不停機（例如缺水），狀態機會卡在 REFILL。需要一個逾時（建議 10 分鐘）退回 IDLE 並把 K_tank 關回去。</p>
+      </div></li>
+      <li><div>
+        <h3>開機瞬間繼電器誤動作</h3>
+        <p>低電平觸發 + open-drain 讓高阻抗即等於「關」，開機時天然安全。仍須實機驗證上電、重開機、燒錄期間四路都不動作。</p>
+      </div></li>
+      <li><div>
+        <h3>不加保護元件，也不去動低開繼電器的線圈</h3>
+        <p>分壓的 100kΩ 本身就把故障電流限在 0.24 mA 等級（算式見輸入段），而那顆繼電器已經穩定運作很久。繼電器模組的四路輸出有光耦隔離、線圈也有內建續流二極體。<strong>整套改造不新增任何一顆二極體。</strong></p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">驗證</p>
+      <h2>五個階段</h2>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head"><span class="n">階段一</span><h3>乾式</h3><span class="cond">不通水 · 泵的 XT60 拔掉</span></div>
+      <div class="callout">
+        <span class="label">第 0 項 —— 先過這關再往下做</span>
+        <p><strong>確認跳線與觸發極性</strong>：<span class="m">S1</span>–<span class="m">S4</span> 接到 <span class="m">L</span>。接一路，用 Lua 來回切十次，確認吸合與釋放都乾脆、放開時沒有嗡嗡聲。<strong>這是唯一能證明 3.3V 驅動與殘流沒問題的方法。</strong></p>
+      </div>
+      <ol class="checks">
+        <li>四路輸出接 LED 或萬用電表。反覆上電、重開機、燒錄韌體，確認<strong>全程不動作</strong>。</li>
+        <li>手動觸發一次流程，用碼錶核對時序與上表相符。</li>
+        <li>透過 HTTP 改 <span class="m">T_FLUSH</span>，重開機確認值有存活；再送一個超過硬上限的值，確認<strong>被拒絕</strong>。</li>
+        <li><strong>日曆換算先在 PC 上驗</strong>：沒有 Lua 工具鏈，所以把 epoch → 本地時間的演算法照抄成 Python，對幾百個隨機 epoch 與多個時區偏移跟 <span class="m">datetime</span> 交叉比對。<strong>這是最容易寫錯又最不容易在裝置上發現的部分</strong>，先驗過再燒。</li>
+        <li><strong>log 輪替</strong>：把上限暫時改小（例如 2 KB）跑一陣子，確認 <span class="m">log.txt</span> 會變成 <span class="m">log.1.txt</span>、新檔重開，且 <span class="m">?full=1</span> 兩個檔都讀得到。</li>
+      </ol>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head"><span class="n">階段二</span><h3>訊號驗證</h3><span class="cond">通水 · 泵仍斷開</span></div>
+      <ol class="checks" start="6">
+        <li>確認橘線分壓後的中點電壓在 0V／2.6V 之間乾淨切換。<strong>因為沒有加任何保護元件，這項改用實測來確認判斷正確</strong> —— 有示波器就看有沒有超過 3.3V 的尖峰；沒有的話，長跑期間留意 IN1 讀值是否一直正確（GPIO 被打壞通常表現為讀值卡在某一側不再變化）。</li>
+        <li>正常用水一次，確認 IN1 的上升沿被抓到、且對應到板子確實停機。</li>
+        <li>關掉進水球閥模擬缺水，確認 IN2 變低、狀態機拒絕觸發。</li>
+        <li>沖洗中人為讓 IN2 變低，確認 ABORT 在 1 秒內把四路全部復歸。</li>
+        <li><strong>串流不爆記憶體</strong>：讓 log 長到 100 KB 以上，用 <span class="m">curl</span> 抓完整檔案，同時盯 <span class="m">node.heap()</span>。抓完後堆積要回到原本水位，不能持續下降。</li>
+        <li><strong>校時</strong>：重開機後先 <span class="m">curl /log</span>，確認新行的 epoch 欄位是 <span class="m">-</span>；用瀏覽器開一次首頁，再抓一次，確認之後的行有正確的本地時間。</li>
+      </ol>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head"><span class="n">階段三</span><h3>濕式</h3><span class="cond">接回泵</span></div>
+      <ol class="checks" start="12">
+        <li>手動觸發一次完整流程。量杯接排水管記錄排水量，與量測三對照，據此定案 <span class="m">T_FLUSH</span> 與硬上限。</li>
+        <li>聽泵聲，確認沒有空打的乾轉異音。<strong>特別注意沖洗末段</strong>，那是桶最接近見底的時刻。</li>
+        <li><strong>核心假設的直接驗證</strong>：沖洗全程用萬用電表盯著橘線 —— 控制板<strong>不可以</strong>有任何動作。</li>
+        <li><strong><span class="m">T_ISOLATE</span> 到底有沒有效</strong>：把它暫時設成 0 再跑幾次，看板子會不會在起始瞬間被吵醒。設 0 會醒、設 200ms 不會醒，就證明這個延遲確實擋住了切換窗口；若兩者都不會醒，代表 K_tank 的釋放本來就夠快，但保留它當保險。</li>
+        <li><strong>不影響時序</strong>：開著序列埠跑一次完整循環，碼錶核對各階段秒數與加 log 之前一致（寫檔不應造成可見延遲）。</li>
+      </ol>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head"><span class="n">階段四</span><h3>循環與失效安全</h3></div>
+      <ol class="checks" start="17">
+        <li><strong>完整循環</strong>：正常用一次水 → 確認 30 分鐘內再用水<strong>不會</strong>觸發沖洗 → 什麼都不做等到 30 分鐘，確認它<strong>自己</strong>就開始跑補桶與沖洗（不需要再用一次水）。</li>
+        <li><strong>pending 路徑</strong>：把週期暫時改成 2 分鐘，在計時器到期的那一刻持續開著龍頭，確認系統等到你關龍頭才開始補桶。</li>
+        <li><strong>撞上用水的中止</strong>：沖洗跑到一半時開龍頭，確認四路立刻復歸、你馬上有水喝，而且用完水後系統會自動重試。</li>
+        <li><strong><span class="m">used</span> 旗標</strong>：沖洗完成後<strong>完全不碰龍頭</strong>，確認過了 30 分鐘、60 分鐘都不會有任何動作。這是長期外出不空轉的驗證。</li>
+        <li>開龍頭確認<strong>沒有出水延遲</strong>（驗證 K_tank 關閉時造水直接供龍頭）。</li>
+        <li>待機中直接拔掉 NodeMCU 電源，確認四路釋放、機器退化成單純直通式 RO 且照常出水。</li>
+        <li><strong>中止退避</strong>：連續製造三次會中止的情況（例如沖洗中一直開著龍頭），確認第三次之後進入鎖定、log 有一筆 <span class="m">LOCK</span>，且成功沖洗一次後計數歸零。</li>
+      </ol>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head"><span class="n">階段五</span><h3>長跑</h3><span class="cond">一週</span></div>
+      <ol class="checks" start="24">
+        <li>連續觀察一週，記錄每日沖洗次數與桶的補水表現。<strong>重點看 log 裡的 <span class="m">ABORT</span> 是不是都對得上你實際開龍頭的時間</strong> —— 對不上就代表隔離假設有問題。</li>
+        <li>效果驗證：改造前後各量一次「靜置數小時後第一杯水的 TDS」，用這個數字回頭校正 <span class="m">T_FLUSH</span>。</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <span>直通式 1000G · 無產水儲存桶</span>
+    <span>控制器：NodeMCU ESP8266 · Lua</span>
+    <span>新增水路零件：1 顆常閉電磁閥</span>
+  </footer>
+
+</div>
