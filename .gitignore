@@ -42,3 +42,6 @@ luac.out
 
 # Claude Code local agent settings (machine-specific)
 .claude/
+
+# NodeMCU firmware build artifacts
+*.bin
