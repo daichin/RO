@@ -1,10 +1,9 @@
 -- ro.lua  ── 純水回洗狀態機
 --
--- 核心假設（見計畫「核心設計」一節）：
+-- 核心假設（見 docs/design-plan.md「核心設計」）：
 --   K_tank 關閉時，桶與管路被隔離。沖洗期間廢水閥全開、膜幾乎沒有背壓，
 --   透水量可忽略，而且純水管上的逆止閥另一側是充飽壓力的管路，推不開。
 --   所以整個沖洗對控制板是隱形的 —— 高壓開關一路保持斷開，板子從頭到尾在睡。
---   因此不需要去騙板子（沒有 K_hold），也不需要充壓階段。
 --
 -- 觸發是計時器，不是用水事件：
 --   沖洗完成後開始計時，MIN_INTERVAL 內用水一律不沖；時間一到就補桶＋沖洗，
@@ -13,24 +12,27 @@
 --     之後很久沒人用水的話，膜殼就一直泡在自來水裡。）
 --
 -- 時間全部用 tick 累加，不用 tmr.now()，避免 32-bit 微秒回繞。
--- 重開機後 now_ms 歸零、last_flush 視為很久以前 —— 第一次用水後就會沖一次，這是刻意的。
 
 local cfg = require("cfg")
+local log = require("log")
 
 local M = {}
 
 -- ── 腳位（NodeMCU 索引，不是 GPIO 編號）────────────────────────
 local PIN_PERM  = 1   -- D1 / GPIO5   純水沖洗閥
 local PIN_PUMP  = 2   -- D2 / GPIO4   強制啟動水泵
-local PIN_WASTE = 5   -- D5 / GPIO14  廢水閥電源切換（雙刀）
+local PIN_WASTE = 5   -- D5 / GPIO14  廢水閥電源切換
 local PIN_TANK  = 6   -- D6 / GPIO12  桶隔離閥
 local PIN_IN1   = 7   -- D7 / GPIO13  控制板橘線：低 = 泵運轉
 local PIN_IN2   = 0   -- D0 / GPIO16  藍綠安全鏈：低 = 缺水或漏水
 
 local OUTPUTS = { PIN_PERM, PIN_PUMP, PIN_WASTE, PIN_TANK }
 
--- 繼電器模組為高電位觸發
-local ON, OFF = gpio.HIGH, gpio.LOW
+-- 繼電器模組跳線設在 L（低電平觸發），並用 open-drain 驅動。
+--   開  = 拉低到 0V，在模組規格的 0–1.5V 觸發範圍內
+--   關  = 放開成高阻抗，由模組自己上拉到 5V，光耦完全截止（零殘流）
+-- 高電平觸發需要 3.8–5V，而 ESP8266 只有 3.3V，根本不在規格內。
+local ON, OFF = gpio.LOW, gpio.HIGH
 
 -- ── 時間常數 ───────────────────────────────────────────────────
 local TICK_MS  = 100
@@ -39,8 +41,14 @@ local POST_MS  = 2000               -- 關閥之間的間隔與洩壓時間
 local REFILL_TIMEOUT_MS = 10 * 60 * 1000   -- 補桶逾時，避免卡死
 local REFILL_NOPUMP_MS  = 60 * 1000        -- 開了 K_tank 但板子沒啟動 = 桶本來就滿的
 
+-- 連續中止退避。若中止的原因是隔離假設不成立（沖洗本身吵醒了板子），
+-- 會變成「補桶 → 沖洗 → 板子醒 → 中止 → 板子停 → 補桶」的緊迴圈，
+-- 一直操泵也會把 log 寫爆。
+local ABORT_LOCK_N  = 3
+local ABORT_LOCK_MS = 6 * 60 * 60 * 1000
+
 -- 沖洗中的狀態。這幾個狀態下 K_tank 是關的，控制板應該完全不動。
-local FLUSHING = { PRIME = true, RUN = true, POST1 = true, POST2 = true }
+local FLUSHING = { ISOLATE = true, PRIME = true, RUN = true, POST1 = true, POST2 = true }
 
 -- ── 狀態 ───────────────────────────────────────────────────────
 M.state       = "IDLE"
@@ -60,11 +68,12 @@ local state_since = 0
 --   但那是我們自己叫的、而且緊接著就沖洗，不能拿來自我觸發。
 local used = false
 
--- pending：計時器已到期但板子正在製水，等這次用完。
---   純粹給狀態顯示用；實際觸發是 IDLE 每個 tick 重新評估條件。
+-- pending：計時器已到期但板子正在製水，等這次用完。純粹給狀態顯示用。
 local pending = false
 
 local refill_saw_pump = false
+local consec_aborts   = 0
+local lock_until      = nil
 
 -- ── 去彈跳 ─────────────────────────────────────────────────────
 local function new_input(pin, initial)
@@ -98,22 +107,41 @@ local function enter(state, hold_ms, reason)
   state_since   = now_ms
   deadline      = hold_ms and (now_ms + hold_ms) or nil
   print(string.format("[ro] -> %s  (%s)", state, M.last_reason))
+  log.event("STATE", state, M.last_reason)
 end
 
 -- 中止不更新 last_flush、也不清掉 used。回到 IDLE 後條件重新成立，
 -- 會在適當時機自動重試，不需要額外的重試邏輯。
 function M.abort(why)
-  all_off()
+  all_off()                        -- 安全動作先做完，之後才記 log
   M.abort_count = M.abort_count + 1
   M.last_abort  = why
   pending       = false
-  enter("IDLE", nil, "ABORT: " .. why)
+  consec_aborts = consec_aborts + 1
+
+  M.state       = "IDLE"
+  M.last_reason = "ABORT: " .. why
+  state_since   = now_ms
+  deadline      = nil
+  print("[ro] ABORT: " .. why)
+  log.event("ABORT", "IDLE", why)
+
+  if consec_aborts >= ABORT_LOCK_N then
+    lock_until = now_ms + ABORT_LOCK_MS
+    log.event("LOCK", "IDLE", string.format(
+      "連續中止 %d 次，鎖定 %d 小時。若這幾次都不是你開龍頭造成的，代表隔離假設不成立",
+      consec_aborts, ABORT_LOCK_MS / 3600000))
+  end
 end
 
 -- ── 條件 ───────────────────────────────────────────────────────
 local function interval_elapsed()
   if last_flush == nil then return true end
   return (now_ms - last_flush) >= cfg.min_interval_ms
+end
+
+local function locked()
+  return lock_until and now_ms < lock_until
 end
 
 function M.time_since_flush_ms()
@@ -132,12 +160,12 @@ local function begin_refill(reason)
   enter("REFILL", nil, reason)
 end
 
--- 沖洗第一步：先把桶隔離，之後所有動作板子都看不到。
+-- 沖洗第一步：先把桶隔離，等 T_ISOLATE 之後才動其他閥。
+-- 繼電器與電磁閥不是同時動作的，若 K_tank 還沒關到底、K_perm 就已經開了，
+-- 那一瞬間桶和管路同時通到泵前三通，管路壓力會被拉掉、把板子吵醒。
 local function begin_flush(reason)
-  gpio.write(PIN_TANK,  OFF)
-  gpio.write(PIN_WASTE, ON)
-  gpio.write(PIN_PERM,  ON)
-  enter("PRIME", cfg.t_prime_ms, reason)
+  gpio.write(PIN_TANK, OFF)
+  enter("ISOLATE", cfg.t_isolate_ms, reason)
 end
 
 -- ── 事件 ───────────────────────────────────────────────────────
@@ -175,6 +203,7 @@ end
 -- ── 主迴圈 ─────────────────────────────────────────────────────
 local function tick()
   now_ms = now_ms + TICK_MS
+  log.set_uptime(math.floor(now_ms / 1000))
 
   -- 1. 安全檢查放在最前面，而且不做任何可能阻塞的事。
   --    K_pump 並聯在泵的供電上，繞過了「漏水繼電器 → 低壓開關」的保護鏈，
@@ -195,7 +224,7 @@ local function tick()
   -- 3. 狀態推進
   if M.state == "IDLE" then
     -- 計時器觸發。板子正在製水就先掛著，等它停。
-    if used and interval_elapsed() and in2.val == 1 then
+    if used and interval_elapsed() and in2.val == 1 and not locked() then
       if in1.val == 1 then
         begin_refill("週期到，開始補桶")
       elseif not pending then
@@ -213,7 +242,12 @@ local function tick()
     end
 
   elseif deadline and now_ms >= deadline then
-    if M.state == "PRIME" then
+    if M.state == "ISOLATE" then
+      gpio.write(PIN_WASTE, ON)
+      gpio.write(PIN_PERM,  ON)
+      enter("PRIME", cfg.t_prime_ms, "桶已隔離，開廢水閥與純水閥")
+
+    elseif M.state == "PRIME" then
       gpio.write(PIN_PUMP, ON)
       enter("RUN", cfg.t_flush_ms, "純水正沖中")
 
@@ -229,6 +263,8 @@ local function tick()
       gpio.write(PIN_WASTE, OFF)
       last_flush    = now_ms
       used          = false
+      consec_aborts = 0
+      lock_until    = nil
       M.flush_count = M.flush_count + 1
       enter("IDLE", nil, "沖洗完成，膜殼裡是純水")
     end
@@ -236,6 +272,12 @@ local function tick()
 end
 
 -- ── 對外 ───────────────────────────────────────────────────────
+
+-- 手動觸發會清掉退避鎖定 —— 你既然親自按了，就是要它跑。
+local function clear_lock()
+  consec_aborts = 0
+  lock_until    = nil
+end
 
 -- 手動觸發：跳過週期與補桶，直接沖。測試用。
 function M.manual_flush()
@@ -245,6 +287,7 @@ function M.manual_flush()
   if gpio.read(PIN_IN2) == 0 then
     return false, "安全鏈異常，拒絕沖洗"
   end
+  clear_lock()
   begin_flush("手動觸發")
   return true, "已開始沖洗"
 end
@@ -257,14 +300,18 @@ function M.manual_cycle()
   if gpio.read(PIN_IN2) == 0 then
     return false, "安全鏈異常，拒絕沖洗"
   end
+  clear_lock()
   begin_refill("手動觸發完整循環")
   return true, "已開始補桶"
 end
 
 function M.stop()
   all_off()
-  pending = false
-  enter("IDLE", nil, "手動停止")
+  pending       = false
+  M.state       = "IDLE"
+  M.last_reason = "手動停止"
+  deadline      = nil
+  log.event("STATE", "IDLE", "手動停止")
 end
 
 function M.status()
@@ -277,23 +324,30 @@ function M.status()
     state       = M.state,
     reason      = M.last_reason,
     uptime_s    = math.floor(now_ms / 1000),
+    boot_id     = log.boot_id,
     since_flush = M.time_since_flush_ms(),
     due_ms      = due,                         -- 還有多久到週期；nil = 沒在等
     used        = used,
     pending     = pending,
+    locked_ms   = locked() and (lock_until - now_ms) or nil,
+    aborts_run  = consec_aborts,               -- 連續中止次數
     flushes     = M.flush_count,
     aborts      = M.abort_count,
     last_abort  = M.last_abort,
     pump        = (in1 and in1.val == 0),      -- 控制板是否在跑泵
     safe        = (in2 and in2.val == 1),      -- 安全鏈是否正常
-    t_flush_s   = cfg.t_flush_ms / 1000,
-    interval_m  = cfg.min_interval_ms / 60000,
+    t_flush_s   = cfg.fmt_s(cfg.t_flush_ms),
+    interval_m  = math.floor(cfg.min_interval_ms / 60000),
+    isolate_ms  = cfg.t_isolate_ms,
   }
 end
 
 function M.start()
+  -- open-drain：關 = 放開成高阻抗，由模組上拉到 5V。
+  -- 開機時 ESP8266 的 GPIO 預設就是輸入（高阻抗），等同「關」，
+  -- 所以上電、重開機、燒錄韌體全程四路都是斷開的。
   for _, p in ipairs(OUTPUTS) do
-    gpio.mode(p, gpio.OUTPUT)
+    gpio.mode(p, gpio.OPENDRAIN)
     gpio.write(p, OFF)
   end
   gpio.mode(PIN_IN1, gpio.INPUT)
@@ -303,6 +357,7 @@ function M.start()
   in2 = new_input(PIN_IN2, gpio.read(PIN_IN2))
 
   cfg.load()
+  log.start()
 
   M.timer = tmr.create()
   M.timer:alarm(TICK_MS, tmr.ALARM_AUTO, tick)
