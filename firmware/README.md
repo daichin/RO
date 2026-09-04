@@ -12,9 +12,45 @@
 | `web.lua` | 極小的 HTTP 設定介面與手動觸發 |
 | `wifi_cfg.lua` | WiFi 連線（**選配**，要先填 SSID／密碼） |
 
+## 編譯 NodeMCU 韌體要選哪些模組
+
+ESP8266 建議選 **Lua 5.1 release** 分支：5.3 吃更多 RAM，而這裡有跑 HTTP server，
+ESP8266 的堆積空間本來就緊。程式碼兩邊都相容。
+
+**必要的五個**（`string` `table` `math` 是 Lua 核心，不用選）：
+
+| 模組 | 用在哪 |
+|---|---|
+| `GPIO` | 四路繼電器輸出、IN1／IN2 兩路輸入 |
+| `timer` | 100ms 主 tick、開機延遲 |
+| `file` | `cfg.txt` 參數持久化（SPIFFS） |
+| `net` | HTTP 設定介面 |
+| `wifi` | 連線 |
+
+**刻意不需要的**（勾了只是浪費 flash）：
+
+- `TLS / mbedTLS` —— 只跑純 HTTP。這個省最多空間
+- `sjson` —— 設定刻意用純文字 `key=value`，就是為了不依賴它
+- `SNTP` / `rtctime` —— 狀態機用開機以來的毫秒累加，**完全不需要對時**
+- `MQTT`、`HTTP client`、`crypto`、`encoder`、`ow`、`i2c`、`spi`、`pwm`、`u8g2`
+- `ADC` —— A0 目前保留沒用，之後接 TDS 探頭時再開
+
+**更保守的選擇**：拿掉 `net` 和 `wifi` 也能跑。沖洗邏輯完全離線，只是改 `T_FLUSH`
+要重新上傳 `cfg.lua`。少兩個模組、少一整類當機來源 —— 對一台泡在水槽下面五年的
+機器來說值得考慮。`init.lua` 的 `pcall` 已經把網路啟動包起來，模組不存在只會印一
+行錯誤，不影響狀態機。
+
+### 兩個 API 相容性陷阱
+
+- **`file` 物件 API**：`cfg.lua` 用 `local f = file.open(...)` 再 `f:readline()`。
+  NodeMCU 2.x 以後才有，3.x 是標準。很舊的 5.1 build 只有全域式的
+  `file.readline()`，那樣 `cfg.lua` 要改。
+- **`wifi.eventmon` 是 ESP8266 專用**：ESP32 版 NodeMCU 沒有，要改用
+  `wifi.sta.on(...)`。
+
 ## 燒錄前
 
-1. NodeMCU 韌體需含模組：`gpio` `tmr` `file` `net` `wifi` `string`（3.x 的 file 物件 API）。
+1. 依上面選好模組編譯（或用 nodemcu-build.com）。
 2. 編輯 `wifi_cfg.lua` 填入 SSID／密碼。**留空就完全跳過 WiFi**，沖洗邏輯照常離線運作。
 3. 用 ESPlorer／nodemcu-tool 上傳全部 `.lua`。`init.lua` 最後上傳。
 
