@@ -45,3 +45,5 @@ luac.out
 
 # NodeMCU firmware build artifacts
 *.bin
+# ...except the build we actually flash — 重編要跑一次雲端服務並重選模組，留著省事
+!bin/*.bin
