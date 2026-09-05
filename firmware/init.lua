@@ -34,8 +34,32 @@ boot:alarm(5000, tmr.ALARM_SINGLE, function()
   if _G.cancel_boot then return end
   heap("boot")
 
+  -- LFS 裡的模組不會被 require 自動找到。
+  --
+  -- NodeMCU 3.0 的 package.loaders 只有 preload / SPIFFS / C / Croot 四個，
+  -- 沒有 LFS —— 所以載入了 LFS 映像之後 require 還是會說 module not found。
+  -- 官方做法是自己把 loader 掛上去（見韌體原始碼 docs/lfs.md）。
+  --
+  -- 放在第 3 個位置是上游的慣例：SPIFFS 裡的同名檔案會優先，開發時可以丟
+  -- 一個檔上去暫時覆蓋 LFS 版本。代價是忘了刪的舊檔會靜默地蓋過 LFS ——
+  -- 上傳新版之後記得清掉 SPIFFS 裡的 .lua/.lc。
+  if node.LFS and node.LFS.time then
+    package.loaders[3] = function(name) return node.LFS.get(name) end
+    print(string.format("[boot] LFS 已掛上 require（映像 %d）", node.LFS.time))
+  end
+
   -- WiFi 是選配。連不上不影響沖洗邏輯，所以先起狀態機。
-  require("ro").start()
+  --
+  -- 包 pcall 是因為載入失敗不該變成開機迴圈：錯誤逸出 timer 回呼會讓
+  -- NodeMCU 判定致命而重開機，然後再失敗、再重開，連序列埠提示符都很難搶到。
+  -- 停在這裡至少繼電器是斷開的（開機第一件事就做了），機器維持單純的
+  -- 直通式 RO，而且錯誤訊息看得到。
+  local ok_ro, err_ro = pcall(function() require("ro").start() end)
+  if not ok_ro then
+    print("[boot] 狀態機啟動失敗，繼電器保持斷開（機器仍是單純的直通式 RO）")
+    print("[boot]   " .. tostring(err_ro))
+    return
+  end
   collectgarbage()
   heap("ro")
 
