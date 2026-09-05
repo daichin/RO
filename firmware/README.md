@@ -277,32 +277,66 @@ LFS（Lua Flash Store）讓 Lua 模組的**位元組碼住在 flash 而不是 RA
 
 到 nodemcu-build.com，模組照上面的清單勾，另外把 **LFS size** 從 0 改成 **64KB**（或 128KB）。其餘不變（`release` 分支、`integer`）。
 
-### 2. 取得 luac.cross
+### 2. 取得 luac.cross（本機已經有了）
 
 LFS 映像要用**與韌體同一個 build** 的 `luac.cross` 產生 —— 版本不合會載不進去。
 
-**nodemcu-build.com 不提供 `luac.cross`** —— 完成信裡只有兩個 `.bin` 連結，這點已經實測確認過。
+**nodemcu-build.com 不提供 `luac.cross`** —— 完成信裡只有兩個 `.bin` 連結，這點已經實測確認過。所以只能自己用官方 Docker 映像編。
 
-所以要自己產生，用官方的 Docker 映像（它同時產出韌體與相符的 `luac.cross`）：
+**這台機器上已經編好了**，放在 repo 之外的固定位置：
+
+| 路徑 | 內容 |
+|---|---|
+| `D:\Programming\nodemcu-lfs\luac.cross.int` | 編譯器本體（commit `c8faff28`、integer build）|
+| `D:\Programming\nodemcu-lfs\fw\` | 對應的 nodemcu-firmware 原始碼 |
+
+**不要放在 `%TEMP%` 底下** —— Windows 的磁碟清理會直接掃掉，下次要編就得重跑一次十幾分鐘的 Docker build。
+
+沒有的話（換機器、或不小心刪了）重編：
 
 ```bash
-git clone --branch release https://github.com/nodemcu/nodemcu-firmware.git
-cd nodemcu-firmware
+git clone --branch release https://github.com/nodemcu/nodemcu-firmware.git fw
+cd fw
 git checkout c8faff28e7e1676c7d14ece13e2cbb293860337e   # 與線上 build 同一個 commit
-docker run --rm -ti -v ${PWD}:/opt/nodemcu-firmware marcelstoer/nodemcu-build build
+docker run --rm -v "${PWD}:/opt/nodemcu-firmware" marcelstoer/nodemcu-build build
 ```
 
-產出的 `luac.cross` 在 `luac.cross` 或 `build/luac_cross/`。
+產出的是 `luac.cross`（float）與 `luac.cross.int`（integer）。**我們的韌體是 integer build，要用 `.int` 那個。**
 
 **commit 必須對上**：LFS 映像的格式綁定韌體版本，版本不合會載不進去。你目前線上 build 的 commit 印在開機橫幅上。
 
 ### 3. 產生 LFS 映像
 
+> **`luac.cross.int` 是 Linux ELF 執行檔，Windows 上跑不起來。**
+> 在 cmd／PowerShell 打 `luac.cross -f -o lfs.img ...` 只會得到
+> 「不是內部或外部命令」，**補上完整路徑也一樣沒用**。它必須在容器裡執行。
+
+Git Bash 下：
+
 ```bash
-luac.cross -f -o lfs.img cfg.lua log.lua ro.lua web.lua wifi_cfg.lua
+MSYS_NO_PATHCONV=1 docker run --rm \
+  -v "D:/Programming/nodemcu-lfs:/tc" \
+  -v "D:/Programming/python/ai/RO/firmware:/src" \
+  -v "D:/Programming/python/ai/RO/bin:/out" \
+  marcelstoer/nodemcu-build \
+  bash -c "cd /tmp && cp /src/cfg.lua /src/log.lua /src/ro.lua /src/web.lua /src/wifi_cfg.lua . && \
+           /tc/luac.cross.int -f -m 131072 -o /out/lfs.img \
+           cfg.lua log.lua ro.lua web.lua wifi_cfg.lua"
 ```
 
-`init.lua` **不要放進去** —— NodeMCU 開機時是從 SPIFFS 按檔名找它的。
+- `MSYS_NO_PATHCONV=1` 是給 Git Bash 的，否則它會把容器內的 `/tc`、`/src` 當成 Windows 路徑硬轉。
+- `-m 131072` 要對上韌體的 LFS 分割大小 —— 開機橫幅印的 `LFS: 0x20000 bytes total capacity` 就是 128 KB。
+- 檔案清單裡**沒有 `init.lua`**，它必須留在 SPIFFS，NodeMCU 開機時是按檔名去那裡找的。`wifi_secret.lua` 也不放，那是本機檔案。
+
+**產出的 `lfs.img` 是 gzip 壓縮的**（開頭 `1f 8b`），所以檔案大小（約 17 KB）會明顯小於工具印出來的 `Image size:`（約 34 KB）。這是正常的，NodeMCU 載入時自己解壓 —— 但也代表**用 `grep` 直接搜映像裡的字串一定搜不到**，別被這個誤導成「映像沒更新」。
+
+**驗證映像確實含有剛才的修改**（改完 Lua 最容易漏掉的一步）：
+
+```bash
+python -c "import gzip,sys; d=gzip.decompress(open('bin/lfs.img','rb').read()); print('size',len(d),'hit',d.find(sys.argv[1].encode()))" '某段只有新版才有的字串'
+```
+
+`hit` 是 `-1` 就代表映像還是舊的，回去檢查是不是忘了存檔或掛錯目錄。
 
 ### 4. `require` 不會自動找 LFS —— 這一步不能漏
 
