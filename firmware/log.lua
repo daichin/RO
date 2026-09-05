@@ -117,6 +117,31 @@ function M.names()
   return CUR, OLD
 end
 
+-- 從序列埠倒出記錄。沒有網頁介面時這是唯一的讀法。
+--   log.dump()        目前這個檔
+--   log.dump("old")   輪替出去的舊檔
+--
+-- 一行一行讀後直接寫 UART，不把整個檔組成字串 —— 檔案可達 128 KB
+-- 而自由堆積只有十幾 KB，整包讀進來會當機。
+function M.dump(which)
+  local name = (which == "old") and OLD or CUR
+  local f = file.open(name, "r")
+  if not f then
+    print("[log] 找不到 " .. name)
+    return
+  end
+  while true do
+    local line = f:readline()
+    if not line then break end
+    if uart then
+      uart.write(0, line)          -- readline 已含換行
+    else
+      print((line:gsub("\n$", "")))
+    end
+  end
+  f:close()
+end
+
 function M.size()
   return size
 end

@@ -164,6 +164,29 @@ python tools/check_civil.py
 
 日曆換算（epoch → 年月日）用 Howard Hinnant 的 `civil_from_days`，已在 PC 上對 4120 個案例與 Python 的 `datetime` 交叉比對過 —— 含閏日、2100 非閏世紀年、int32 上限、以及 15 分鐘偏移的時區。
 
+### 從序列埠讀 log
+
+`log.txt` 是寫進 SPIFFS 的，**跟網頁介面無關**。沒有網頁介面時（例如未開 LFS、記憶體不足而跳過），照樣可以接上序列埠倒出來：
+
+```lua
+require("log").dump()        -- 目前這個檔
+require("log").dump("old")   -- 輪替出去的舊檔
+```
+
+一行一行讀後直接寫 UART，不把整個檔組成字串 —— 檔案可達 128 KB 而自由堆積只有十幾 KB。
+
+**所以沒有網頁介面並不影響診斷能力。** 那個最重要的哨兵判斷（凌晨那筆 `ABORT` 是不是你開龍頭造成的）隔天早上接上序列埠就能查。網頁介面買到的是遠端查看與遠端改參數，是便利性而不是能力。
+
+### 沒有網頁介面時改參數
+
+```lua
+require("cfg").set_flush(8)       -- 秒
+require("cfg").set_interval(30)   -- 分鐘
+require("cfg").set_isolate(200)   -- 毫秒
+```
+
+寫進 flash，重開機保留。
+
 ### 連續中止退避
 
 沖洗中偵測到控制板啟動就中止。如果中止的原因是隔離假設不成立（沖洗本身吵醒了板子），會變成「補桶 → 沖洗 → 板子醒 → 中止」的緊迴圈。
@@ -244,13 +267,20 @@ LFS（Lua Flash Store）讓 Lua 模組的**位元組碼住在 flash 而不是 RA
 
 LFS 映像要用**與韌體同一個 build** 的 `luac.cross` 產生 —— 版本不合會載不進去。
 
-nodemcu-build.com 的完成信裡通常會附 `luac.cross` 的下載連結；**先去信裡找**。找不到的話用 Docker：
+**nodemcu-build.com 不提供 `luac.cross`** —— 完成信裡只有兩個 `.bin` 連結，這點已經實測確認過。
+
+所以要自己產生，用官方的 Docker 映像（它同時產出韌體與相符的 `luac.cross`）：
 
 ```bash
-docker run --rm -ti -v $PWD:/opt/nodemcu-firmware/local marcelstoer/nodemcu-build build
+git clone --branch release https://github.com/nodemcu/nodemcu-firmware.git
+cd nodemcu-firmware
+git checkout c8faff28e7e1676c7d14ece13e2cbb293860337e   # 與線上 build 同一個 commit
+docker run --rm -ti -v ${PWD}:/opt/nodemcu-firmware marcelstoer/nodemcu-build build
 ```
 
-（Docker 映像會同時產生韌體與相符的 `luac.cross`。）
+產出的 `luac.cross` 在 `luac.cross` 或 `build/luac_cross/`。
+
+**commit 必須對上**：LFS 映像的格式綁定韌體版本，版本不合會載不進去。你目前線上 build 的 commit 印在開機橫幅上。
 
 ### 3. 產生 LFS 映像
 
