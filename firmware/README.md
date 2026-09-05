@@ -215,6 +215,76 @@ file.remove("web.lua") file.remove("wifi_cfg.lua")
 
 `init.lua` **不要編也不要刪** —— NodeMCU 開機時是按檔名找它的。原始碼都在 git 裡，隨時能重傳。
 
-### 還是不夠的話
+### 實測數字：不開 LFS 就是塞不下
 
-重編韌體時開啟 **LFS**（目前這份是 `LFS: 0x0`，等於沒開）。開了之後所有 Lua 模組的位元組碼都住在 flash 而不是 RAM，那 27 KB 幾乎全部釋放出來。這是記憶體吃緊專案的根本解。
+三輪量測收斂到的結論：
+
+| 階段 | 剩餘堆積 |
+|---|---|
+| 開機 | 41312 |
+| `ro` + `cfg` + `log` | 14392（−26920） |
+| `web` | **1936**（−12456） |
+| `wifi_cfg` | 失敗，`E:M 48` |
+
+總共 39.4 KB / 41.3 KB。**記憶體是見底，不是差一點。** 就算再擠出 2 KB，剩下的也撐不住執行期 —— HTTP 每個請求要配置緩衝、log 寫檔也要。
+
+所以 `init.lua` 加了一道門檻：開機時若堆積低於 `WEB_MIN_HEAP`（20 KB）就**完全跳過網頁介面與 WiFi**，機器維持純離線運作。沖洗邏輯完全不受影響，只是不能用網頁改參數。
+
+這個門檻是自動的 —— 開了 LFS 之後堆積會遠高於它，網頁介面就會自己開始載入，不用改程式。
+
+## 開啟 LFS（要用網頁介面的話，這是唯一的路）
+
+LFS（Lua Flash Store）讓 Lua 模組的**位元組碼住在 flash 而不是 RAM**。開了之後那 39 KB 幾乎全部釋放。NodeMCU 做 LFS 就是為了這個情境。
+
+### 1. 重編韌體
+
+到 nodemcu-build.com，模組照上面的清單勾，另外把 **LFS size** 從 0 改成 **64KB**（或 128KB）。其餘不變（`release` 分支、`integer`）。
+
+### 2. 取得 luac.cross
+
+LFS 映像要用**與韌體同一個 build** 的 `luac.cross` 產生 —— 版本不合會載不進去。
+
+nodemcu-build.com 的完成信裡通常會附 `luac.cross` 的下載連結；**先去信裡找**。找不到的話用 Docker：
+
+```bash
+docker run --rm -ti -v $PWD:/opt/nodemcu-firmware/local marcelstoer/nodemcu-build build
+```
+
+（Docker 映像會同時產生韌體與相符的 `luac.cross`。）
+
+### 3. 產生 LFS 映像
+
+```bash
+luac.cross -f -o lfs.img cfg.lua log.lua ro.lua web.lua wifi_cfg.lua
+```
+
+`init.lua` **不要放進去** —— NodeMCU 開機時是從 SPIFFS 按檔名找它的。
+
+### 4. 燒錄與載入
+
+1. 燒新韌體，上傳 `init.lua`、`wifi_secret.lua` 到 SPIFFS
+2. 上傳 `lfs.img` 到 SPIFFS
+3. 序列埠下：
+
+```lua
+node.LFS.reload("lfs.img")
+```
+
+裝置會重開機並把映像寫進 flash 區。
+
+> 這個 API 名稱在不同版本之間改過（舊版是 `node.flashreload`）。先用 `print(node.LFS)` 確認你這版有沒有 `node.LFS`；沒有的話改用 `node.flashreload("lfs.img")`。
+
+### 5. 清掉 SPIFFS 裡的舊副本
+
+SPIFFS 裡的 `.lua`／`.lc` 會**蓋過** LFS 裡的同名模組，留著等於白開：
+
+```lua
+file.remove("cfg.lc") file.remove("log.lc") file.remove("ro.lc")
+file.remove("web.lc") file.remove("wifi_cfg.lc")
+```
+
+（`.lua` 原始碼如果還在也一併刪掉。）
+
+### 6. 確認
+
+重開機後看 `[mem]` —— `[mem] ro` 那行應該從 14392 跳到接近 40000。到那個數字，`WEB_MIN_HEAP` 的門檻自動通過，網頁介面就會啟動。
