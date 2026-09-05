@@ -47,3 +47,6 @@ luac.out
 *.bin
 # ...except the build we actually flash — 重編要跑一次雲端服務並重選模組，留著省事
 !bin/*.bin
+
+# WiFi 帳密，不進版控（照 firmware/wifi_secret.lua.example 建立）
+firmware/wifi_secret.lua

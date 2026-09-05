@@ -4,10 +4,19 @@
 -- 連不上、斷線、重連都不會影響 ro.lua 的時序或 ABORT 路徑，
 -- 因為這裡用的全是非阻塞的事件回呼，沒有任何等待迴圈。
 --
--- 把下面兩行填好即可。留空字串就完全跳過 WiFi。
+-- 帳密放在 wifi_secret.lua（未納版控），不放在這裡 ——
+-- 這樣密碼不會被 commit 上去，pull 的時候也不會跟你的本機設定打架。
+-- 照著 wifi_secret.lua.example 複製一份填好即可。
+--
+-- 沒有那個檔就走離線模式，沖洗邏輯完全不受影響，只是沒有網頁介面。
 
-local SSID = ""
-local PASS = ""
+local SSID, PASS = "", ""
+do
+  local ok, sec = pcall(require, "wifi_secret")
+  if ok and type(sec) == "table" then
+    SSID, PASS = sec.ssid or "", sec.pass or ""
+  end
+end
 
 local M = {}
 

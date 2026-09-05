@@ -11,7 +11,8 @@
 | `cfg.lua` | 參數持久化（`cfg.txt`），含硬上限 |
 | `web.lua` | 極小的 HTTP 設定介面與手動觸發 |
 | `log.lua` | 事件記錄：寫 SPIFFS、輪替、epoch → 本地時間 |
-| `wifi_cfg.lua` | WiFi 連線（**選配**，要先填 SSID／密碼） |
+| `wifi_cfg.lua` | WiFi 連線（**選配**） |
+| `wifi_secret.lua` | WiFi 帳密。**未納版控**，照 `.example` 自行建立 |
 
 ## 編譯 NodeMCU 韌體要選哪些模組
 
@@ -52,7 +53,9 @@ ESP8266 的堆積空間本來就緊。程式碼兩邊都相容。
 ## 燒錄前
 
 1. 依上面選好模組編譯（或用 nodemcu-build.com）。
-2. 編輯 `wifi_cfg.lua` 填入 SSID／密碼。**留空就完全跳過 WiFi**，沖洗邏輯照常離線運作。
+2. 複製 `wifi_secret.lua.example` 成 `wifi_secret.lua` 並填入 SSID／密碼。
+   **不建也可以** —— 找不到就走離線模式，沖洗邏輯照常運作，只是沒有網頁介面。
+   這個檔在 `.gitignore` 裡，密碼不會進版控，pull 也不會跟本機設定打架。
 3. 用 ESPlorer／nodemcu-tool 上傳全部 `.lua`。`init.lua` 最後上傳。
 
 ## 開機的安全窗口
