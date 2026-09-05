@@ -334,9 +334,11 @@
     font-size: 0.88em;
   }
 
+  /* 區塊，不是 flex：內容是帶 <strong>／<code> 的一整句話。
+     flex 會把每個行內元素和它們之間的每段文字各自變成一個
+     flex item 排成一列，句子就被切成好幾欄。 */
   .verdict {
-    display: flex;
-    gap: 10px;
+    display: block;
     border-radius: 8px;
     padding: 10px 14px;
     font-size: 0.9rem;
