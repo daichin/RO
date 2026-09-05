@@ -11,7 +11,9 @@ local PASS = ""
 
 local M = {}
 
-function M.start()
+-- on_ip: 拿到 IP 之後呼叫一次。init.lua 用它來延後啟動網頁伺服器，
+--        避免在記憶體最緊的時候做事。
+function M.start(on_ip)
   if SSID == "" then
     print("[wifi] 未設定 SSID，離線運作")
     return
@@ -21,8 +23,14 @@ function M.start()
   wifi.sta.config({ ssid = SSID, pwd = PASS, auto = true, save = false })
 
   -- 事件回呼，不是輪詢等待。連線失敗只是印一行，不會卡住任何東西。
+  local served = false
   wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function(t)
     print("[wifi] 已連線 " .. t.IP)
+    -- 斷線重連會再觸發一次，但伺服器只需要掛一次
+    if on_ip and not served then
+      served = true
+      on_ip(t.IP)
+    end
   end)
 
   wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, function(t)
