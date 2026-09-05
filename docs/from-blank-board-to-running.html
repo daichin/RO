@@ -1,0 +1,702 @@
+<title>從空板到運轉</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f7f4;
+    --surface: #ffffff;
+    --surface-2: #eef2ee;
+    --ink: #1a2a28;
+    --muted: #56685f;
+    --line: #d8e0da;
+    --accent: #c1701f;
+    --accent-ink: #7a4813;
+    --accent-bg: #f3e6d3;
+    --layer-base: #33453f;
+    --layer-base-ink: #eef2ee;
+    --good: #3f7d52;
+    --good-bg: #e7f1e6;
+    --bad: #ad4128;
+    --bad-bg: #f8e9e2;
+    --console-bg: #142320;
+    --console-ink: #d9f0d6;
+    --console-dim: #7fa88c;
+    --shadow: 0 1px 2px rgba(20, 35, 30, 0.06), 0 8px 24px -12px rgba(20, 35, 30, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12181a;
+      --surface: #182120;
+      --surface-2: #1e2a27;
+      --ink: #e9f0ea;
+      --muted: #9db2a8;
+      --line: #2c3a35;
+      --accent: #e08a3c;
+      --accent-ink: #f3c592;
+      --accent-bg: #2c2216;
+      --layer-base: #0e1513;
+      --layer-base-ink: #cfe0d8;
+      --good: #6bbf85;
+      --good-bg: #1d2e22;
+      --bad: #e08267;
+      --bad-bg: #33221d;
+      --console-bg: #0c1412;
+      --console-ink: #cfeecb;
+      --console-dim: #5f8770;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12181a;
+    --surface: #182120;
+    --surface-2: #1e2a27;
+    --ink: #e9f0ea;
+    --muted: #9db2a8;
+    --line: #2c3a35;
+    --accent: #e08a3c;
+    --accent-ink: #f3c592;
+    --accent-bg: #2c2216;
+    --layer-base: #0e1513;
+    --layer-base-ink: #cfe0d8;
+    --good: #6bbf85;
+    --good-bg: #1d2e22;
+    --bad: #e08267;
+    --bad-bg: #33221d;
+    --console-bg: #0c1412;
+    --console-ink: #cfeecb;
+    --console-dim: #5f8770;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', 'Public Sans', system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    line-height: 1.7;
+  }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1, h2, h3 {
+    font-family: 'Archivo', 'Noto Sans TC', sans-serif;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+  code, .mono, pre {
+    font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  a { color: var(--accent-ink); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* header */
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    font-weight: 800;
+    margin: 0 0 10px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 1.02rem;
+    max-width: 42em;
+    margin: 0;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .meta-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* prerequisite note */
+  .prereq {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 40px;
+    font-size: 0.92rem;
+  }
+  .prereq strong { color: var(--accent-ink); }
+
+  /* layer diagram */
+  .stack-wrap {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 26px 26px 22px;
+    margin-bottom: 44px;
+  }
+  .stack-wrap h2 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  .stack {
+    display: grid;
+    gap: 10px;
+  }
+  .layer {
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+  }
+  .layer.app {
+    background: var(--accent-bg);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .layer.mid {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+  }
+  .layer.base {
+    background: var(--layer-base);
+    color: var(--layer-base-ink);
+  }
+  .layer .name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 0 0 4px;
+  }
+  .layer.app .name { color: var(--accent-ink); }
+  .layer .desc {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin: 0;
+  }
+  .layer .tool {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    text-align: right;
+    white-space: nowrap;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.14);
+  }
+  .layer.app .tool {
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    color: var(--accent-ink);
+  }
+  .layer.mid .tool {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .stack-note {
+    color: var(--muted);
+    font-size: 0.86rem;
+    margin: 16px 0 0;
+  }
+
+  /* kit box */
+  .kit {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 20px 22px;
+    margin: 14px 0 18px;
+  }
+  .kit .kit-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 8px;
+  }
+  .kit h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-family: 'Archivo', sans-serif;
+  }
+  .kit p { margin: 0 0 8px; font-size: 0.92rem; }
+  .kit p:last-child { margin-bottom: 0; }
+  .kit + .kit { margin-top: -4px; }
+
+  /* steps */
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    margin-bottom: 8px;
+  }
+  .step-num {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent-ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .step-rail {
+    grid-column: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .step-rail::after {
+    content: "";
+    width: 1px;
+    flex: 1;
+    background: var(--line);
+    margin-top: 4px;
+  }
+  .step-body { padding-bottom: 30px; }
+  .step-body h3 {
+    font-size: 1.15rem;
+    margin: 8px 0 8px;
+    font-weight: 700;
+  }
+  .step-body p { margin: 0 0 10px; }
+  .step-body p.hint { color: var(--muted); font-size: 0.9rem; }
+  .step-body ol, .step-body ul { margin: 0 0 12px; padding-left: 1.3em; }
+  .step-body li { margin-bottom: 4px; }
+
+  pre.term {
+    background: var(--console-bg);
+    color: var(--console-ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 10px 0 12px;
+  }
+  pre.term .dim { color: var(--console-dim); }
+  pre.term .ok { color: #9be29a; font-weight: 600; }
+  pre.term .zh { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; }
+
+  code.inline {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+
+  .verdict {
+    display: flex;
+    gap: 10px;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+  .verdict.good { background: var(--good-bg); color: var(--good); }
+  .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  .verdict strong { font-weight: 700; }
+
+  .order-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+  }
+  .order-list .f {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .order-list .f.last {
+    background: var(--accent-bg);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .order-list .arrow { color: var(--muted); }
+
+  .tt-wrap { overflow-x: auto; }
+  table.tt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+    margin: 8px 0 0;
+  }
+  table.tt th {
+    text-align: left;
+    font-family: 'Archivo', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.tt td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.tt tr:last-child td { border-bottom: none; }
+
+  section.block { margin: 44px 0; }
+  section.block > h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  section.block > .lede {
+    color: var(--muted);
+    margin: 0 0 20px;
+    font-size: 0.95rem;
+    max-width: 42em;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 56px;
+    padding-top: 22px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  footer code { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .step { grid-template-columns: 36px 1fr; gap: 12px; }
+    .step-num { width: 36px; height: 36px; font-size: 0.95rem; border-radius: 8px; }
+    .layer { grid-template-columns: 1fr; }
+    .layer .tool { text-align: left; }
+  }
+</style>
+
+<main>
+
+  <header class="masthead">
+    <div class="eyebrow">韌體上線 · 燒錄與部署</div>
+    <h1>從空板到運轉</h1>
+    <p class="subtitle">板子已經確認能燒錄了。接下來把 NodeMCU 韌體燒進板子、把這個工作區的 Lua 沖洗邏輯打包成 LFS 映像送上去，最後讓它真正開始運轉。</p>
+    <div class="meta-row">
+      <span class="meta-chip">ESP8266 · NodeMCU 韌體 + Lua 應用</span>
+      <span class="meta-chip">esptool 燒錄</span>
+      <span class="meta-chip">LFS 128 KB</span>
+      <span class="meta-chip">integer build</span>
+    </div>
+  </header>
+
+  <div class="prereq">
+    <span>✓</span>
+    <div><strong>前置條件：</strong>板子已通過燒錄前的硬體檢查（<code class="inline">esptool.py chip_id</code> 讀得到 Chip ID）。還沒做過的話先看 <code class="inline">docs/can-this-board-be-flashed.html</code>，確認板子能通電、序列埠認得到、esptool 連得上，再回來繼續。</div>
+  </div>
+
+  <div class="stack-wrap">
+    <h2>先弄懂三層</h2>
+    <div class="stack">
+      <div class="layer app">
+        <div>
+          <p class="name">init.lua（SPIFFS）</p>
+          <p class="desc">開機入口。放開繼電器、掛 LFS loader、啟動狀態機。<strong>唯一不能編譯、不能進 LFS 的檔案</strong></p>
+        </div>
+        <div class="tool">序列埠逐行上傳</div>
+      </div>
+      <div class="layer mid">
+        <div>
+          <p class="name">lfs.img（Lua Flash Store）</p>
+          <p class="desc">cfg · log · ro · web · wifi_cfg 的位元組碼，住在 flash 而不是 RAM</p>
+        </div>
+        <div class="tool">luac.cross.int 打包</div>
+      </div>
+      <div class="layer base">
+        <div>
+          <p class="name">NodeMCU 韌體（Lua 直譯器）</p>
+          <p class="desc">跑在 ESP8266 上的 C 韌體本體，提供 gpio／tmr／file／net／wifi 等模組</p>
+        </div>
+        <div class="tool">esptool 燒錄</div>
+      </div>
+    </div>
+    <p class="stack-note">最下層只燒一次；改沖洗邏輯時重打包中間層；<code class="inline">init.lua</code> 幾乎不用動。<strong>LFS 不是選配</strong> —— ESP8266 開機只有約 41 KB 堆積，五個模組全載進 RAM 要 39.4 KB，網頁介面根本起不來。理由與實測數字見 <code class="inline">firmware/README.md</code>。</p>
+  </div>
+
+  <section class="block">
+    <h2>建置與上線流程</h2>
+    <p class="lede">八個步驟，由下層往上層推進。</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>編一份帶 LFS 的韌體</h3>
+        <p>到 <strong>nodemcu-build.com</strong>，勾這五個模組（<code class="inline">string</code> <code class="inline">table</code> <code class="inline">math</code> 是 Lua 核心，不用勾）：</p>
+        <div class="order-list">
+          <span class="f">GPIO</span><span class="f">timer</span><span class="f">file</span><span class="f">net</span><span class="f">wifi</span>
+        </div>
+        <p>然後三個關鍵選項：</p>
+        <ul>
+          <li>branch 選 <strong><code class="inline">release</code></strong>（Lua 5.1）—— 5.3 吃更多 RAM</li>
+          <li>build type 選 <strong><code class="inline">integer</code></strong> —— 程式碼全面避開 <code class="inline">%f</code>，就是為了配合它</li>
+          <li><strong>LFS size 從 0 改成 128KB</strong> —— 這一格是整件事的關鍵，漏了就得重編重燒</li>
+        </ul>
+        <p class="hint"><strong>不要用 GitHub Releases 的預編譯版本</strong>：官方預編譯的 LFS size 是 0，這個專案用不了。TLS／sjson／SNTP／MQTT 一律不勾 —— 省下的 flash 才夠給 LFS。</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>把韌體燒進板子</h3>
+        <p>用硬體檢查時確認過的序列埠，先清空再寫入：</p>
+        <pre class="term">$ esptool.py --port /dev/ttyUSB0 erase_flash
+Erasing flash (this may take a while)...
+Chip erase completed successfully <span class="ok">in 8.7s</span>
+
+$ esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash -fm dio 0x00000 nodemcu-release-integer.bin
+Writing at 0x00080000... <span class="ok">(100 %)</span>
+Hash of data verified.</pre>
+        <p class="hint"><code class="inline">-fm dio</code> 是大多數 NodeMCU 開發板正確的 flash mode。燒完序列埠全是亂碼、找不到 <code class="inline">&gt;</code> 提示字元，就換成 <code class="inline">-fm qio</code> 重燒。</p>
+        <p>接上序列埠（115200 baud）按一下 RST，橫幅裡有兩個數字要記下來：</p>
+        <pre class="term">NodeMCU custom build by frightanic.com
+   branch: release
+   commit: <span class="ok">c8faff28</span>          <span class="dim">← 打包 LFS 要用同一個 commit</span>
+   modules: file,gpio,net,node,tmr,wifi
+ build type: integer
+    LFS ver: <span class="ok">0x20000 bytes total capacity</span>   <span class="dim">← 128 KB，對應 -m 131072</span>
+&gt; </pre>
+        <div class="verdict good"><strong>看到 <code class="inline">&gt;</code> 提示字元、而且 LFS 容量不是 0</strong>，下層就位了。</div>
+        <div class="verdict bad"><strong>LFS 顯示 none 或 0</strong> → 回步驟 1，LFS size 那格忘了改，重編重燒。</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>建立 wifi_secret.lua（選配）</h3>
+        <p>WiFi 帳密<strong>不寫在 <code class="inline">wifi_cfg.lua</code> 裡</strong> —— 那個檔在版控裡，密碼進去就出不來了，pull 的時候也會跟本機設定打架。改成獨立一個檔，已經寫在 <code class="inline">.gitignore</code>：</p>
+        <pre class="term">$ cd firmware
+$ cp wifi_secret.lua.example wifi_secret.lua
+<span class="dim"># 編輯它，填入：</span>
+return { ssid = "<span class="ok">你的WiFi名稱</span>", pass = "<span class="ok">你的WiFi密碼</span>" }</pre>
+        <p class="hint">不建這個檔也可以 —— 找不到就走離線模式，沖洗邏輯照常運作，只是沒有網頁介面。所有連線判斷都是非阻塞的事件回呼，不會因為連不上而卡住狀態機。</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>打包 LFS 映像</h3>
+        <p>打包工具 <code class="inline">tools/luac.cross.int</code> 已經在版控裡（commit <code class="inline">c8faff28</code>、integer build），clone 下來就能用。</p>
+        <div class="verdict bad"><strong>它是 Linux ELF 執行檔，Windows 上跑不起來。</strong>在 cmd／PowerShell 打 <code class="inline">luac.cross ...</code> 只會得到「不是內部或外部命令」，補上完整路徑也一樣 —— 它必須在 Docker 容器裡執行。</div>
+        <p>在 repo 根目錄開 Git Bash：</p>
+        <pre class="term">$ MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd -W):/repo" \
+    marcelstoer/nodemcu-build \
+    bash -c "cd /tmp && cp /repo/firmware/cfg.lua /repo/firmware/log.lua \
+      /repo/firmware/ro.lua /repo/firmware/web.lua /repo/firmware/wifi_cfg.lua . && \
+      /repo/tools/luac.cross.int -f -m 131072 -o /repo/bin/lfs.img \
+      cfg.lua log.lua ro.lua web.lua wifi_cfg.lua"
+Image size: 33680</pre>
+        <ul>
+          <li><code class="inline">-m 131072</code> 要對上步驟 2 橫幅印的 <code class="inline">0x20000</code></li>
+          <li>清單裡<strong>沒有 <code class="inline">init.lua</code></strong> —— 它必須留在 SPIFFS，NodeMCU 開機是按檔名去那裡找的</li>
+          <li>先 <code class="inline">cp</code> 到 <code class="inline">/tmp</code> 再編，是因為 <code class="inline">luac.cross</code> 拿檔名當模組名</li>
+        </ul>
+        <p><strong>產出的 <code class="inline">lfs.img</code> 是 gzip 壓縮的</strong>（開頭 <code class="inline">1f 8b</code>），所以檔案約 17 KB、比工具印的 <code class="inline">Image size</code> 小一半。這代表 <strong>用 <code class="inline">grep</code> 搜映像裡的字串一定搜不到</strong> —— 那個現象跟「映像沒更新」長得一模一樣，很容易誤判。要驗就解壓再搜：</p>
+        <pre class="term">$ python -c "import gzip,sys; d=gzip.decompress(open('bin/lfs.img','rb').read()); \
+    print('size',len(d),'hit',d.find(sys.argv[1].encode()))" '<span class="zh">某段只有新版才有的字串</span>'
+size 34736 hit <span class="ok">11263</span>          <span class="dim">← -1 就代表映像還是舊的</span></pre>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>上傳三個檔案到 SPIFFS</h3>
+        <div class="order-list">
+          <span class="f">lfs.img</span><span class="arrow">→</span>
+          <span class="f">wifi_secret.lua</span><span class="arrow">→</span>
+          <span class="f last">init.lua</span>
+        </div>
+        <p><strong><code class="inline">init.lua</code> 一定最後傳</strong>：它是每次開機自動執行的入口，先上去而 LFS 還沒載入的話，開機就會找不到模組。</p>
+        <div class="kit">
+          <p class="kit-label">工具 A · nodemcu-tool</p>
+          <pre class="term">$ nodemcu-tool upload bin/lfs.img firmware/wifi_secret.lua
+$ nodemcu-tool upload firmware/init.lua</pre>
+          <p class="hint">這支工具需要 <strong>Node 12</strong> —— 它依賴的 serialport 8 在新版 Node 上編不起來。</p>
+        </div>
+        <div class="kit">
+          <p class="kit-label">工具 B · ESPlorer</p>
+          <p>右上角選序列埠與 115200 baud、按 Open，左下「Open」選檔案後按「Save to ESP8266」，照上面的順序一個一個傳。</p>
+        </div>
+        <div class="verdict bad"><strong>傳完一定要核對大小。</strong>ESPlorer 是逐行送的，序列埠一忙就會掉行 —— <strong>而且不會報錯</strong>。曾經因此把 <code class="inline">init.lua</code> 截斷在第 79 行，開機直接噴 <code class="inline">'then' expected near '&lt;eof&gt;'</code>，看起來完全像程式碼寫錯。</div>
+        <pre class="term">&gt; print(file.list()["init.lua"])
+2379          <span class="dim">← 要跟本機檔案大小一模一樣，不一樣就重傳</span></pre>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3>把映像載進 LFS 區，再清掉 SPIFFS 舊副本</h3>
+        <pre class="term">&gt; node.LFS.reload("lfs.img")
+<span class="dim">裝置會自己重開機，把映像寫進 flash 的 LFS 區</span></pre>
+        <p class="hint">這個 API 名稱在不同版本改過。先 <code class="inline">print(node.LFS)</code> 確認你這版有沒有 <code class="inline">node.LFS</code>；沒有的話用 <code class="inline">node.flashreload("lfs.img")</code>。</p>
+        <p><strong>然後把 SPIFFS 裡的同名檔案清乾淨</strong> —— 它們會蓋過 LFS 裡的模組，留著等於白開：</p>
+        <pre class="term">&gt; file.remove("cfg.lc") file.remove("log.lc") file.remove("ro.lc")
+&gt; file.remove("web.lc") file.remove("wifi_cfg.lc")
+<span class="dim">.lua 原始碼如果還在也一併刪掉</span></pre>
+        <div class="verdict bad"><strong>這一步最容易漏。</strong>忘了刪的舊檔會<strong>靜默地</strong>蓋過 LFS 版本 —— 沒有任何錯誤訊息，只是你改的東西怎麼傳都不生效。</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h3>開機</h3>
+        <p>按 RST。序列埠會依序看到：</p>
+        <pre class="term">[boot] relays forced off
+<span class="dim">... 5 秒安全視窗 ...</span>
+[mem] boot heap=<span class="dim">4xxxx</span>
+[boot] LFS loader ok
+[mem] ro   heap=<span class="dim">4xxxx</span>          <span class="dim">← 開了 LFS 應該接近 40000</span>
+[mem] web  heap=<span class="dim">3xxxx</span>
+<span class="zh">[wifi] 連線中 你的WiFi名稱</span>
+<span class="zh">[wifi] 已連線 192.168.50.177</span>
+<span class="zh">[web] 設定介面已啟動 :80</span>
+[mem] srv  heap=<span class="ok">33048</span></pre>
+        <div class="verdict good"><strong>四路繼電器第一件事就被放開成高阻抗（＝斷開）。</strong>模組是低電平觸發，GPIO 放手後由模組自己上拉到 5V，光耦完全截止。機器此時退化成單純的直通式 RO —— 這是刻意設計的開機安全狀態，不是故障。</div>
+        <p class="hint">懷疑剛上傳的東西有問題，就在那 5 秒內對序列埠打 <code class="inline">stop()</code> —— 取消這次啟動、不跑沖洗邏輯，也不必重燒韌體。</p>
+        <div class="verdict bad">沒看到 <code class="inline">[boot] LFS loader ok</code>，代表映像沒載進去 —— 回步驟 6。</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h3>確認真的在跑</h3>
+        <p>沒接 WiFi：留在序列埠看狀態訊息，或直接倒出事件記錄 —— <strong>沒有網頁介面並不影響診斷能力</strong>：</p>
+        <pre class="term">&gt; require("log").dump()</pre>
+        <p>接了 WiFi、拿到 IP 之後：</p>
+        <pre class="term">$ curl http://192.168.50.177/status
+state=IDLE pump=false safe=true used=false pending=false locked_ms=nil
+due_ms=nil boot=7 flushes=0 aborts=0 flush_s=8 interval_m=30
+isolate_ms=200 heap=31160</pre>
+        <p>或用瀏覽器開 <code class="inline">http://&lt;裝置IP&gt;/</code> 看狀態頁與參數表單。想手動測一次沖洗用 <code class="inline">/flush</code>（跳過補桶），要立刻停就開 <code class="inline">/stop</code>。</p>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="block">
+    <h2>疑難排解</h2>
+    <p class="lede">大多數狀況對得到三層其中一層。這張表裡的每一條都是實機上真的踩過的。</p>
+    <div class="tt-wrap">
+      <table class="tt">
+        <thead><tr><th>現象</th><th>對到哪一層</th><th>處理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>開機後序列埠全是亂碼，找不到 <code class="inline">&gt;</code></td>
+            <td>韌體 · flash mode 不對</td>
+            <td>步驟 2 的 <code class="inline">-fm dio</code> 換成 <code class="inline">-fm qio</code>（或反過來），重新 <code class="inline">erase_flash</code> 再燒</td>
+          </tr>
+          <tr>
+            <td><code class="inline">module 'ro' not found</code>，但 <code class="inline">node.LFS.time</code> 明明有值</td>
+            <td>LFS · loader 沒掛上</td>
+            <td>NodeMCU 3.0 的 <code class="inline">package.loaders</code> <strong>沒有 LFS searcher</strong>，映像載入成功也一樣找不到模組。<code class="inline">init.lua</code> 裡的 <code class="inline">package.loaders[3]</code> 那段就是補這個，確認它有跑到</td>
+          </tr>
+          <tr>
+            <td><code class="inline">not enough memory</code> / <code class="inline">E:M 48</code> 之類</td>
+            <td>LFS · 根本沒開，或被 SPIFFS 舊檔蓋掉</td>
+            <td>五個模組全載進 RAM 要 39.4 KB，而開機只有 41 KB —— 一定爆。檢查橫幅的 LFS 容量不是 0，且步驟 6 的 <code class="inline">.lc</code>／<code class="inline">.lua</code> 都刪乾淨了</td>
+          </tr>
+          <tr>
+            <td><code class="inline">'then' expected near '&lt;eof&gt;'</code> 之類的語法錯</td>
+            <td>上傳 · 檔案被截斷</td>
+            <td><strong>不是程式碼壞了。</strong>用 <code class="inline">print(file.list()["init.lua"])</code> 對大小，不符就重傳</td>
+          </tr>
+          <tr>
+            <td>改了 Lua、也重打包上傳了，行為卻沒變</td>
+            <td>LFS · 映像其實是舊的，或被 SPIFFS 舊檔蓋掉</td>
+            <td>用步驟 4 的 gzip 解壓驗證確認映像內容；再確認步驟 6 的舊副本都清掉了。<strong>直接 grep 映像不算驗證</strong>，它是壓縮的</td>
+          </tr>
+          <tr>
+            <td>開機後一路重複重開機（boot loop）</td>
+            <td>上層 · 剛上傳的檔案寫壞</td>
+            <td>安全窗口內打 <code class="inline">stop()</code> 取消啟動，修好再重傳，不必重燒韌體</td>
+          </tr>
+          <tr>
+            <td>序列埠一直印<span class="mono">「斷線 reason=...」</span>，連不上自家 WiFi</td>
+            <td>路由器 · MAC 白名單分頻段</td>
+            <td>ESP8266 只有 2.4GHz。開了 Smart Connect 的路由器，白名單<strong>開關是全域的、清單卻是分頻段的</strong> —— MAC 只加在 5G 清單裡，2.4G 清單是空的，結果就是全擋。把 MAC 加進 <strong>2.4G</strong> 白名單</td>
+          </tr>
+          <tr>
+            <td>WiFi 連上了，但 <code class="inline">:80</code> 沒起來、也沒有錯誤訊息</td>
+            <td>上層 · 事件註冊競態</td>
+            <td><code class="inline">wifi.sta.config</code> 帶 <code class="inline">auto=true</code>，呼叫當下就開始連線；handler 註冊晚了就會漏接 <code class="inline">GOT_IP</code>，而那個事件不補發。<code class="inline">wifi_cfg.lua</code> 已改成先註冊再 config，並在 config 後補查一次 <code class="inline">getip()</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    板子開機、繼電器先放開成斷開、沖洗狀態機在背景待命 —— 接下來就是量測水桶容積與泵流量，把 <code>cfg.lua</code> 裡 <code>T_FLUSH_MAX_MS</code> 這個硬上限，從保守的預設值調到實測後的安全值。細節見 <code>docs/design-plan.md</code>。
+  </footer>
+
+</main>
