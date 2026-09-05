@@ -29,24 +29,40 @@ function M.start(on_ip)
   end
 
   wifi.setmode(wifi.STATION)
-  wifi.sta.config({ ssid = SSID, pwd = PASS, auto = true, save = false })
 
-  -- 事件回呼，不是輪詢等待。連線失敗只是印一行，不會卡住任何東西。
+  -- 斷線重連會再觸發 GOT_IP，但伺服器只需要掛一次
   local served = false
-  wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function(t)
-    print("[wifi] 已連線 " .. t.IP)
-    -- 斷線重連會再觸發一次，但伺服器只需要掛一次
+  local function fire(ip)
     if on_ip and not served then
       served = true
-      on_ip(t.IP)
+      on_ip(ip)
     end
+  end
+
+  -- handler 必須註冊在 config() 之前。
+  --
+  -- config 帶 auto=true，呼叫當下就開始連線 —— 如果 GOT_IP 在註冊完成之前
+  -- 就觸發，那個事件永遠收不到，症狀是「WiFi 明明連上了，網頁伺服器卻沒起
+  -- 來」。這種失敗沒有錯誤訊息，只會偶爾發生在連線特別快的時候，非常難查。
+  wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function(t)
+    print("[wifi] 已連線 " .. t.IP)
+    fire(t.IP)
   end)
 
   wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, function(t)
     print("[wifi] 斷線 reason=" .. tostring(t.reason) .. "，背景自動重連中")
   end)
 
+  wifi.sta.config({ ssid = SSID, pwd = PASS, auto = true, save = false })
   print("[wifi] 連線中 " .. SSID)
+
+  -- 另一條漏接路徑：SDK 可能在我們之前就自動重連完成，那樣 GOT_IP 已經
+  -- 發過、不會再來一次。所以直接查一次現況補上。
+  local ip = wifi.sta.getip()
+  if ip and ip ~= "0.0.0.0" then
+    print("[wifi] 已經是連線狀態 " .. ip)
+    fire(ip)
+  end
 end
 
 function M.ip()
