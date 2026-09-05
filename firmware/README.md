@@ -1,6 +1,13 @@
 # RO 純水回洗韌體（NodeMCU / Lua）
 
-設計說明：[`docs/design-plan.md`](../docs/design-plan.md)（完整計畫）、[`docs/ro-permeate-flush.html`](../docs/ro-permeate-flush.html)（同一份設計的網頁版）
+文件：
+
+| 文件 | 內容 |
+|---|---|
+| [`docs/design-plan.md`](../docs/design-plan.md) | 完整設計計畫 |
+| [`docs/ro-permeate-flush.html`](../docs/ro-permeate-flush.html) | 同一份設計的網頁版 |
+| [`docs/can-this-board-be-flashed.html`](../docs/can-this-board-be-flashed.html) | 燒錄前的硬體檢查（九項） |
+| [`docs/from-blank-board-to-running.html`](../docs/from-blank-board-to-running.html) | 從空板到運轉：燒錄、LFS、上傳、驗證 |
 
 ## 檔案
 
@@ -277,31 +284,26 @@ LFS（Lua Flash Store）讓 Lua 模組的**位元組碼住在 flash 而不是 RA
 
 到 nodemcu-build.com，模組照上面的清單勾，另外把 **LFS size** 從 0 改成 **64KB**（或 128KB）。其餘不變（`release` 分支、`integer`）。
 
-### 2. 取得 luac.cross（本機已經有了）
+### 2. luac.cross.int（已在版控裡）
 
 LFS 映像要用**與韌體同一個 build** 的 `luac.cross` 產生 —— 版本不合會載不進去。
 
 **nodemcu-build.com 不提供 `luac.cross`** —— 完成信裡只有兩個 `.bin` 連結，這點已經實測確認過。所以只能自己用官方 Docker 映像編。
 
-**這台機器上已經編好了**，放在 repo 之外的固定位置：
+編好的那份收在 **`tools/luac.cross.int`**（268 KB，commit `c8faff28`、integer build），跟著 repo 走，clone 下來就能直接用，不必每次重編。
 
-| 路徑 | 內容 |
-|---|---|
-| `D:\Programming\nodemcu-lfs\luac.cross.int` | 編譯器本體（commit `c8faff28`、integer build）|
-| `D:\Programming\nodemcu-lfs\fw\` | 對應的 nodemcu-firmware 原始碼 |
+> 官方映像會產出 `luac.cross`（float）與 `luac.cross.int`（integer）兩份。**我們的韌體是 integer build，所以版控裡放的是 `.int` 那個。**
 
-**不要放在 `%TEMP%` 底下** —— Windows 的磁碟清理會直接掃掉，下次要編就得重跑一次十幾分鐘的 Docker build。
-
-沒有的話（換機器、或不小心刪了）重編：
+要重編的時候（換韌體版本、或想自己驗一次）：
 
 ```bash
 git clone --branch release https://github.com/nodemcu/nodemcu-firmware.git fw
 cd fw
 git checkout c8faff28e7e1676c7d14ece13e2cbb293860337e   # 與線上 build 同一個 commit
-docker run --rm -v "${PWD}:/opt/nodemcu-firmware" marcelstoer/nodemcu-build build
+docker run --rm -v "$(pwd -W):/opt/nodemcu-firmware" marcelstoer/nodemcu-build build
 ```
 
-產出的是 `luac.cross`（float）與 `luac.cross.int`（integer）。**我們的韌體是 integer build，要用 `.int` 那個。**
+編完把新的 `luac.cross.int` 覆蓋回 `tools/`，那份 clone（約 130 MB）就可以刪了 —— 需要時再 clone 一次，不用長期佔著硬碟。
 
 **commit 必須對上**：LFS 映像的格式綁定韌體版本，版本不合會載不進去。你目前線上 build 的 commit 印在開機橫幅上。
 
@@ -311,20 +313,18 @@ docker run --rm -v "${PWD}:/opt/nodemcu-firmware" marcelstoer/nodemcu-build buil
 > 在 cmd／PowerShell 打 `luac.cross -f -o lfs.img ...` 只會得到
 > 「不是內部或外部命令」，**補上完整路徑也一樣沒用**。它必須在容器裡執行。
 
-Git Bash 下：
+在 **repo 根目錄**開 Git Bash：
 
 ```bash
-MSYS_NO_PATHCONV=1 docker run --rm \
-  -v "D:/Programming/nodemcu-lfs:/tc" \
-  -v "D:/Programming/python/ai/RO/firmware:/src" \
-  -v "D:/Programming/python/ai/RO/bin:/out" \
+MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd -W):/repo" \
   marcelstoer/nodemcu-build \
-  bash -c "cd /tmp && cp /src/cfg.lua /src/log.lua /src/ro.lua /src/web.lua /src/wifi_cfg.lua . && \
-           /tc/luac.cross.int -f -m 131072 -o /out/lfs.img \
+  bash -c "cd /tmp && cp /repo/firmware/cfg.lua /repo/firmware/log.lua /repo/firmware/ro.lua /repo/firmware/web.lua /repo/firmware/wifi_cfg.lua . && \
+           /repo/tools/luac.cross.int -f -m 131072 -o /repo/bin/lfs.img \
            cfg.lua log.lua ro.lua web.lua wifi_cfg.lua"
 ```
 
-- `MSYS_NO_PATHCONV=1` 是給 Git Bash 的，否則它會把容器內的 `/tc`、`/src` 當成 Windows 路徑硬轉。
+- `$(pwd -W)` 讓 Git Bash 吐出 Docker 認得的 `D:/...` 路徑；`MSYS_NO_PATHCONV=1` 則擋住它把容器內的 `/repo` 也一起轉成 Windows 路徑。
+- 先 `cp` 到 `/tmp` 再編，是因為 `luac.cross` 拿**檔名**當模組名 —— 直接餵 `/repo/firmware/cfg.lua` 會得到名字不對的模組。
 - `-m 131072` 要對上韌體的 LFS 分割大小 —— 開機橫幅印的 `LFS: 0x20000 bytes total capacity` 就是 128 KB。
 - 檔案清單裡**沒有 `init.lua`**，它必須留在 SPIFFS，NodeMCU 開機時是按檔名去那裡找的。`wifi_secret.lua` 也不放，那是本機檔案。
 

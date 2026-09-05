@@ -1,0 +1,534 @@
+<title>Can This Board Be Flashed?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f7f4;
+    --surface: #ffffff;
+    --surface-2: #eef2ee;
+    --ink: #1a2a28;
+    --muted: #56685f;
+    --line: #d8e0da;
+    --accent: #c1701f;
+    --accent-ink: #7a4813;
+    --good: #3f7d52;
+    --good-bg: #e7f1e6;
+    --bad: #ad4128;
+    --bad-bg: #f8e9e2;
+    --console-bg: #142320;
+    --console-ink: #d9f0d6;
+    --console-dim: #7fa88c;
+    --shadow: 0 1px 2px rgba(20, 35, 30, 0.06), 0 8px 24px -12px rgba(20, 35, 30, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12181a;
+      --surface: #182120;
+      --surface-2: #1e2a27;
+      --ink: #e9f0ea;
+      --muted: #9db2a8;
+      --line: #2c3a35;
+      --accent: #e08a3c;
+      --accent-ink: #f3c592;
+      --good: #6bbf85;
+      --good-bg: #1d2e22;
+      --bad: #e08267;
+      --bad-bg: #33221d;
+      --console-bg: #0c1412;
+      --console-ink: #cfeecb;
+      --console-dim: #5f8770;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12181a;
+    --surface: #182120;
+    --surface-2: #1e2a27;
+    --ink: #e9f0ea;
+    --muted: #9db2a8;
+    --line: #2c3a35;
+    --accent: #e08a3c;
+    --accent-ink: #f3c592;
+    --good: #6bbf85;
+    --good-bg: #1d2e22;
+    --bad: #e08267;
+    --bad-bg: #33221d;
+    --console-bg: #0c1412;
+    --console-ink: #cfeecb;
+    --console-dim: #5f8770;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.55;
+  }
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1, h2, h3 {
+    font-family: 'Archivo', system-ui, sans-serif;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  code, .mono, pre, .pin {
+    font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  a { color: var(--accent-ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* header */
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    font-weight: 800;
+    margin: 0 0 10px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 1.02rem;
+    max-width: 58ch;
+    margin: 0;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .meta-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* checklist box */
+  .kit {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin-bottom: 40px;
+  }
+  .kit h2 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+  .kit ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .kit li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 0.95rem;
+  }
+  .kit li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-top: 7px;
+    border-radius: 1px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .kit small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  /* steps */
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    margin-bottom: 8px;
+  }
+  .step-num {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent-ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .step-rail {
+    grid-column: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .step-rail::after {
+    content: "";
+    width: 1px;
+    flex: 1;
+    background: var(--line);
+    margin-top: 4px;
+  }
+  .step-body {
+    padding-bottom: 34px;
+  }
+  .step-body h3 {
+    font-size: 1.15rem;
+    margin: 8px 0 8px;
+    font-weight: 700;
+  }
+  .step-body p {
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .step-body p.hint {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  pre.term {
+    background: var(--console-bg);
+    color: var(--console-ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 10px 0 12px;
+  }
+  pre.term .dim { color: var(--console-dim); }
+  pre.term .ok { color: #9be29a; font-weight: 600; }
+
+  code.inline {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+
+  .verdict {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+  .verdict.good { background: var(--good-bg); color: var(--good); }
+  .verdict.bad { background: var(--bad-bg); color: var(--bad); }
+  .verdict strong { font-weight: 700; }
+
+  /* troubleshoot table */
+  .tt-wrap { overflow-x: auto; }
+  table.tt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin: 8px 0 0;
+  }
+  table.tt th {
+    text-align: left;
+    font-family: 'Archivo', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.tt td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.tt tr:last-child td { border-bottom: none; }
+
+  section.block {
+    margin: 44px 0;
+  }
+  section.block > h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  section.block > .lede {
+    color: var(--muted);
+    margin: 0 0 20px;
+    font-size: 0.95rem;
+    max-width: 60ch;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 56px;
+    padding-top: 22px;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  footer code { color: var(--ink); }
+
+  @media (max-width: 520px) {
+    .step { grid-template-columns: 36px 1fr; gap: 12px; }
+    .step-num { width: 36px; height: 36px; font-size: 0.95rem; border-radius: 8px; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .step-body { transition: none; }
+  }
+</style>
+
+<main>
+
+  <header class="masthead">
+    <div class="eyebrow">Hardware check &middot; before flashing</div>
+    <h1>Can this NodeMCU actually be flashed?</h1>
+    <p class="subtitle">Before you put the RO permeate-flush firmware on the board, confirm the board will talk back at all. Nine checks, in order, using the USB port and <code class="inline">esptool</code> &mdash; no firmware upload yet.</p>
+    <div class="meta-row">
+      <span class="meta-chip">ESP8266 · NodeMCU devkit</span>
+      <span class="meta-chip">Windows / macOS / Linux</span>
+      <span class="meta-chip">~10 min</span>
+    </div>
+  </header>
+
+  <div class="kit">
+    <h2>Before you start</h2>
+    <ul>
+      <li>The NodeMCU board itself<small>Look near the USB port for a small chip labelled <span class="mono">CH340</span>, <span class="mono">CH9102F</span>, or <span class="mono">CP2102</span> &mdash; that's the USB-to-serial bridge, and it decides which driver you need next.</small></li>
+      <li>A <em>data</em> USB cable, not a charge-only one<small>Many micro-USB / USB-C cables only wire the power pins. If the board's LED lights up but your computer never lists a new port, this is the first thing to swap.</small></li>
+      <li>A computer with a terminal and Python 3<small>For installing and running <span class="mono">esptool</span>, the same tool the Arduino IDE and NodeMCU flashers use underneath.</small></li>
+    </ul>
+  </div>
+
+  <section class="block">
+    <h2>The nine checks</h2>
+    <p class="lede">Work top to bottom. Each check either passes or points straight at the next thing to fix &mdash; you don't need to understand everything before proceeding.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Identify the USB-serial chip</h3>
+        <p>Flip the board over or look next to the USB connector. The small IC there is almost always one of three: <code class="inline">CH340G</code>, <code class="inline">CH9102F</code>, or <code class="inline">CP2102</code>/<code class="inline">CP2102N</code>. This alone tells you which driver to look for on step 3.</p>
+        <p class="hint">No visible marking, or it's sanded off? Assume CH340 &mdash; it's the chip on the vast majority of NodeMCU clones.</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Plug in with a known-good data cable</h3>
+        <p>Connect the board directly to your computer (skip hubs and charge-only extension cables for this test). The onboard LED should light immediately &mdash; that only confirms power, not data.</p>
+        <div class="verdict bad"><strong>Cable is suspect</strong> if the LED lights but nothing shows up in steps 4&ndash;5. Try a different cable before touching any driver or software.</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Install the USB-serial driver</h3>
+        <p>macOS and Linux usually have CH340 and CP2102 support built into the kernel already. Windows almost always needs a driver installed manually, matched to the chip from step 1:</p>
+        <ul>
+          <li>CH340 / CH9102F &rarr; WCH's driver (search "CH341SER" or "CH9102" driver from WCH-IC)</li>
+          <li>CP2102 / CP2102N &rarr; Silicon Labs' "CP210x USB to UART" driver</li>
+        </ul>
+        <p class="hint">Linux only: add yourself to the serial-port group so you don't need <code class="inline">sudo</code> for every command &mdash; <code class="inline">sudo usermod -a -G dialout $USER</code>, then log out and back in.</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Confirm the OS sees a new serial port</h3>
+        <p>With the board plugged in, check for a new port:</p>
+        <pre class="term"><span class="dim"># Windows &mdash; Device Manager</span>
+Ports (COM &amp; LPT)
+  &gt; USB-SERIAL CH340 (COM5)      <span class="ok">&larr; note this COM number</span>
+
+<span class="dim"># macOS</span>
+$ ls /dev/cu.*
+/dev/cu.wchusbserial14110         <span class="ok">&larr; or SLAB_USBtoUART</span>
+
+<span class="dim"># Linux</span>
+$ dmesg | tail
+[  102.4] ch341 1-1:1.0: ch341-uart converter now attached to ttyUSB0
+$ ls /dev/ttyUSB*
+/dev/ttyUSB0</pre>
+        <div class="verdict good"><strong>Pass:</strong> a port appears. Write down its name &mdash; you'll pass it to every command below.</div>
+        <div class="verdict bad"><strong>Fail:</strong> nothing new appears &rarr; back to step 2 (cable) or step 3 (driver).</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>Install esptool</h3>
+        <pre class="term">$ pip install esptool
+$ esptool.py version
+esptool.py v4.7.0</pre>
+        <p class="hint">If <code class="inline">esptool.py</code> isn't found on your PATH, use <code class="inline">python -m esptool version</code> instead &mdash; same tool.</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h3>Ask the chip who it is</h3>
+        <p>This is the real test. Replace the port with the one from step 4:</p>
+        <pre class="term">$ esptool.py --port /dev/ttyUSB0 chip_id
+esptool.py v4.7.0
+Serial port /dev/ttyUSB0
+Connecting...<span class="dim">.</span>
+Detecting chip type... <span class="ok">ESP8266</span>
+Chip is ESP8266EX
+Features: WiFi
+Chip ID: 0x00a1b2c3
+Uploading stub...
+Running stub...
+Stub running...
+Chip ID: 0x00a1b2c3
+Hard resetting via RTS pin...</pre>
+        <div class="verdict good"><strong>This is the pass condition.</strong> If you see <code class="inline">Detecting chip type... ESP8266</code> followed by a Chip ID, the board is alive, the bootloader responds, and it can be flashed.</div>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <h3>If it timed out: try manual bootloader entry</h3>
+        <p>NodeMCU boards normally auto-reset into the bootloader using the CH340/CP2102's DTR/RTS lines wired to GPIO0 and RST. When that circuit doesn't cooperate:</p>
+        <ol>
+          <li>Hold the <strong>FLASH</strong> button (GPIO0) down</li>
+          <li>Tap and release <strong>RST</strong> while still holding FLASH</li>
+          <li>Release FLASH</li>
+          <li>Re-run the <code class="inline">chip_id</code> command from step 6 within a few seconds</li>
+        </ol>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <h3>Read the flash size &amp; confirm write access</h3>
+        <p>Chip ID alone proves the board talks. This proves it can be written to:</p>
+        <pre class="term">$ esptool.py --port /dev/ttyUSB0 flash_id
+Manufacturer: c8
+Device: 4016
+Detected flash size: <span class="ok">4MB</span></pre>
+        <p class="hint">Most NodeMCU boards report 4MB. A mismatch or garbled output here usually means a flaky connection, not a dead board &mdash; retry once before assuming the worst.</p>
+      </div>
+    </div>
+    <div class="step-rail"></div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <h3>Back up the current flash contents</h3>
+        <p>Optional, but cheap insurance before this board gets the permeate-flush firmware &mdash; a full dump you can restore from if anything goes wrong later:</p>
+        <pre class="term">$ esptool.py --port /dev/ttyUSB0 read_flash 0x0 0x400000 backup_before_ro_flash.bin</pre>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="block">
+    <h2>Troubleshooting</h2>
+    <p class="lede">Symptoms map to one of five causes almost every time.</p>
+    <div class="tt-wrap">
+      <table class="tt">
+        <thead>
+          <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No port appears at all</td>
+            <td>Charge-only cable, or driver not installed</td>
+            <td>Swap the cable first &mdash; it's the more common cause &mdash; then reinstall the driver for the chip from step 1</td>
+          </tr>
+          <tr>
+            <td><code class="inline">Permission denied</code> opening the port</td>
+            <td>Your user isn't in the serial device group (Linux)</td>
+            <td><code class="inline">sudo usermod -a -G dialout $USER</code>, then log out/in</td>
+          </tr>
+          <tr>
+            <td><code class="inline">Failed to connect... Timed out waiting for packet header</code></td>
+            <td>Auto-reset circuit didn't trip, or a bad cable</td>
+            <td>Manual bootloader entry (step 7); try a shorter/known-good cable</td>
+          </tr>
+          <tr>
+            <td>Board resets or browns out mid-command</td>
+            <td>USB port can't supply enough current</td>
+            <td>Use a rear/motherboard USB port or a powered hub instead of a laptop's front USB or a hub with other devices drawing current</td>
+          </tr>
+          <tr>
+            <td>Garbled text on serial monitor, not on esptool</td>
+            <td>Wrong baud rate for the monitor (esptool itself auto-negotiates)</td>
+            <td>NodeMCU firmware's console defaults to 115200; the ROM bootloader briefly prints at 74880 right after reset &mdash; both are normal</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Board confirmed flashable? The next step is flashing the NodeMCU (Lua) firmware image itself, then getting this project's Lua onto it &mdash; covered in <code>docs/from-blank-board-to-running.html</code> and <code>firmware/README.md</code>.
+  </footer>
+
+</main>
