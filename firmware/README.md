@@ -290,7 +290,21 @@ luac.cross -f -o lfs.img cfg.lua log.lua ro.lua web.lua wifi_cfg.lua
 
 `init.lua` **不要放進去** —— NodeMCU 開機時是從 SPIFFS 按檔名找它的。
 
-### 4. 燒錄與載入
+### 4. `require` 不會自動找 LFS —— 這一步不能漏
+
+NodeMCU 3.0 的 `package.loaders` 只有 `preload / SPIFFS / C / Croot` 四個，**沒有 LFS**。所以就算映像載入成功（`node.LFS.time` 有值、`node.LFS.list()` 列得出模組），`require("ro")` 還是會說 module not found。
+
+`init.lua` 已經處理了：
+
+```lua
+if node.LFS and node.LFS.time then
+  package.loaders[3] = function(name) return node.LFS.get(name) end
+end
+```
+
+放第 3 個位置是上游慣例 —— SPIFFS 的同名檔案會優先，開發時可以丟一個檔上去暫時覆蓋 LFS 版本。**代價是忘了刪的舊檔會靜默地蓋過 LFS**，這也是下面第 6 步要清乾淨的原因。
+
+### 5. 燒錄與載入
 
 1. 燒新韌體，上傳 `init.lua`、`wifi_secret.lua` 到 SPIFFS
 2. 上傳 `lfs.img` 到 SPIFFS
@@ -304,7 +318,7 @@ node.LFS.reload("lfs.img")
 
 > 這個 API 名稱在不同版本之間改過（舊版是 `node.flashreload`）。先用 `print(node.LFS)` 確認你這版有沒有 `node.LFS`；沒有的話改用 `node.flashreload("lfs.img")`。
 
-### 5. 清掉 SPIFFS 裡的舊副本
+### 6. 清掉 SPIFFS 裡的舊副本
 
 SPIFFS 裡的 `.lua`／`.lc` 會**蓋過** LFS 裡的同名模組，留著等於白開：
 
@@ -315,6 +329,6 @@ file.remove("web.lc") file.remove("wifi_cfg.lc")
 
 （`.lua` 原始碼如果還在也一併刪掉。）
 
-### 6. 確認
+### 7. 確認
 
 重開機後看 `[mem]` —— `[mem] ro` 那行應該從 14392 跳到接近 40000。到那個數字，`WEB_MIN_HEAP` 的門檻自動通過，網頁介面就會啟動。
