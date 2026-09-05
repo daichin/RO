@@ -21,6 +21,19 @@
 | `wifi_cfg.lua` | WiFi 連線（**選配**） |
 | `wifi_secret.lua` | WiFi 帳密。**未納版控**，照 `.example` 自行建立 |
 
+## bin/
+
+燒進裝置的兩個二進位檔都在版控裡 —— 韌體重編要跑一次雲端服務並重選模組，映像要起 Docker，留著都比重做省事。
+
+| 檔案 | 說明 |
+|---|---|
+| `nodemcu-release-7-modules-2026-09-05-17-49-17-integer.bin` | 目前燒在板子上的韌體。`release` 分支、`integer`、七個模組、**LFS 128 KB** |
+| `lfs.img` | `cfg`／`log`／`ro`／`web`／`wifi_cfg` 打包成的 LFS 映像 |
+
+**`lfs.img` 會過期，而且不會有人告訴你。** 它是那五支 `.lua` 在某個時間點的位元組碼快照。改了 Lua 卻忘記重打包，版控裡這份就跟原始碼對不上 —— 裝置照樣開機、照樣運轉，只是你的修改完全沒生效，**沒有任何錯誤訊息**。
+
+所以改完 Lua 一律重跑一次〈開啟 LFS〉的第 3 步，把新的 `lfs.img` 一起 commit。那一節附的 gzip 解壓驗證就是用來擋這件事的。
+
 ## 編譯 NodeMCU 韌體要選哪些模組
 
 ESP8266 建議選 **Lua 5.1 release** 分支：5.3 吃更多 RAM，而這裡有跑 HTTP server，

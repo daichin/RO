@@ -1,4 +1,6 @@
-# luac.cross.int 是 Linux ELF 執行檔。明確標成 binary，避免任何
-# CRLF 轉換把它弄壞 —— 那種損壞在 checkout 之後不會有任何徵兆，
-# 只會在 docker 裡執行時噴 Exec format error。
+# 二進位檔一律明確標記，避免任何 CRLF 轉換把它們弄壞 —— 那種損壞在
+# checkout 之後不會有任何徵兆，只會在真的要用的時候才炸：ELF 噴
+# Exec format error，韌體燒進去開不了機，LFS 映像 gzip 解不開。
 tools/luac.cross.int binary
+bin/lfs.img               binary
+bin/*.bin                 binary
