@@ -119,6 +119,14 @@ cd firmware && python ../tools/luacheck.py *.lua
 
 它只驗結構，不驗執行期符號 —— NodeMCU 的 `gpio`／`tmr` 等全域在 PC 上不存在，本來也檢查不到。執行期的錯要靠設計計畫裡的階段一乾式測試。
 
+**格式字串檢查**（`string.format` 的佔位符與參數數量是否相符）：
+
+```bash
+cd firmware && python ../tools/check_format.py *.lua
+```
+
+Lua 只有在那行真的執行時才會報錯，所以少見分支裡的不符（例如錯誤頁）會一直潛伏到最需要它的那天。
+
 **日曆換算交叉比對**：
 
 ```bash
@@ -170,3 +178,43 @@ python tools/check_civil.py
 
 - **全部程式碼避開 `%f` 格式**。秒數用 `cfg.fmt_s()` 以整數運算組出 `8.5` 這種字串。
 - 日曆換算的 `/` 在整數版本來就是整數除法，而算式裡的值全為非負，整數除法等於 `floor`，兩種版本行為一致。
+
+## 記憶體：實機量出來的教訓
+
+ESP8266 開機後只有約 **41 KB** 堆積，而 `ro` + `cfg` + `log` 三個模組就吃掉 **27 KB**，剩下十幾 KB 要塞 `web`。這不是理論值，是實機 `[mem]` 印出來的。
+
+踩過的三個坑：
+
+**一、啟動順序**　原本是先連 WiFi 再載入 `web.lua`，等於在記憶體最緊的時候做最耗記憶體的事。改成先 `require`（編譯）、拿到 IP 之後才 `start`（綁 socket）。
+
+**二、要預編譯成 `.lc`**　載入 `.lua` 要跑一次剖析器，會做大塊配置。改用 `.lc` 之後可用堆積多了約 4 KB，失敗的配置也從 2576 bytes 縮到 272 bytes。做法見下。
+
+**三、字串常數的數量比總長度更要命**　每個 Lua 字串物件在 ESP8266 上有約 24 bytes 標頭，而且每個都是獨立的小配置。`web.lua` 原本把頁面拆成一百多個片段用 `table.concat` 組，光標頭就快 3 KB，碎片化到連 272 bytes 都配不出來。改成「一個大樣板 + `string.format`」之後常數數量減半。
+
+**所以改這幾支檔時，不要為了排版把字串拆行。**
+
+### 預編譯成 .lc
+
+1. 重開機，在 5 秒內下 `stop()` —— 狀態機不啟動，堆積維持在 41 KB，這是編譯的最佳時機
+2. 一個一個編，不要一行擠完：
+
+```lua
+node.compile("cfg.lua")
+node.compile("log.lua")
+node.compile("ro.lua")
+node.compile("web.lua")
+node.compile("wifi_cfg.lua")
+```
+
+3. 刪掉已編譯的原始碼（`require` 會優先找 `.lc`）：
+
+```lua
+file.remove("cfg.lua") file.remove("log.lua") file.remove("ro.lua")
+file.remove("web.lua") file.remove("wifi_cfg.lua")
+```
+
+`init.lua` **不要編也不要刪** —— NodeMCU 開機時是按檔名找它的。原始碼都在 git 裡，隨時能重傳。
+
+### 還是不夠的話
+
+重編韌體時開啟 **LFS**（目前這份是 `LFS: 0x0`，等於沒開）。開了之後所有 Lua 模組的位元組碼都住在 flash 而不是 RAM，那 27 KB 幾乎全部釋放出來。這是記憶體吃緊專案的根本解。
