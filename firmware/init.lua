@@ -39,13 +39,29 @@ boot:alarm(5000, tmr.ALARM_SINGLE, function()
   collectgarbage()
   heap("ro")
 
-  -- 這裡的順序很重要。
+  -- 網頁介面是選配，而且它很貴：web 約 12.5 KB、wifi_cfg 約 2 KB，
+  -- 加上執行期要留給 HTTP 緩衝與 log 寫檔的餘裕，總共需要約 20 KB。
   --
-  -- 編譯 Lua 原始碼是整個開機流程中最吃記憶體的動作，而 WiFi 一連上就會
-  -- 佔走一大塊堆積。原本 wifi 排在 web 前面，結果 web.lua 編到一半配不到
-  -- 記憶體（E:M 64），整個網頁介面起不來。
+  -- 未開 LFS 的韌體上，ro+cfg+log 已經吃掉 27 KB 的 41 KB 堆積，剩下的
+  -- 塞不下。硬載的話會在中途 OOM —— 而且是載到一半才炸，狀態難以預期。
   --
-  -- 所以拆成兩步：先 require（編譯，趁堆積還多），連上網之後才 listen。
+  -- 所以先看夠不夠再決定載不載。不夠就乾脆完全跳過，機器維持純離線運作：
+  -- 沖洗邏輯完全不受影響，只是不能用網頁改參數。
+  --
+  -- 開啟 LFS 重編韌體之後，模組的位元組碼會住在 flash 而不是 RAM，
+  -- 堆積會遠高於這個門檻，這段就會自動開始載入網頁介面，不用改程式。
+  local WEB_MIN_HEAP = 20000
+
+  if node.heap() < WEB_MIN_HEAP then
+    print(string.format(
+      "[boot] 堆積 %d < %d，跳過網頁介面，純離線運作（沖洗邏輯不受影響）",
+      node.heap(), WEB_MIN_HEAP))
+    print("[boot] 想要網頁介面請重編韌體並開啟 LFS，詳見 firmware/README.md")
+    return
+  end
+
+  -- 順序：先 require（編譯，最吃記憶體，趁堆積還多時做），
+  --       連上網拿到 IP 之後才 listen（只是綁 socket，幾乎不吃記憶體）。
   local ok, web = pcall(require, "web")
   if not ok then
     print("[boot] web 載入失敗，離線運作: " .. tostring(web))
@@ -56,8 +72,6 @@ boot:alarm(5000, tmr.ALARM_SINGLE, function()
 
   local ok2, err = pcall(function()
     require("wifi_cfg").start(function()
-      -- 拿到 IP 才掛伺服器。這時 web 早就編譯好了，只是綁一個 socket，
-      -- 幾乎不吃記憶體。
       if web then
         local ok3, e = pcall(web.start)
         if not ok3 then print("[boot] web 啟動失敗: " .. tostring(e)) end
